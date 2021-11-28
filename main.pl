@@ -40,7 +40,9 @@ executa(X) :- X =:= 1, write('\u001b[31mNão implementado!\u001b[0m').
 executa(X) :- X =:= 2, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       read(Nome),
-		       identificaClientesByEstafeta(Nome,L),nl,write('[Lista de Clientes associados] ------------------'),nl,
+		       identificaClientesByEstafeta(Nome,L),nl,
+		       write('[Lista de Clientes associados] ------------------'),nl,
+		       write('Identificador - Nome - NIF - Encomenda'),nl,
 		       printList(L),write('----------------------------------------------'),!.
 executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
@@ -65,16 +67,19 @@ printList([X|XS]) :- write(X),nl,printList(XS).
 printList(_) :- write('Not a list'),nl.
 
 %Getters
-getEstafetaPorNome(Nome,X) :-  findall(estafeta(Id,Nome,Encomendas, Ranking),estafeta(Id,Nome,Encomendas, Ranking),[X|_]).
+getEstafetaPorNome(Nome,X) :-  findall(estafeta(Id,Nome,Encomendas),estafeta(Id,Nome,Encomendas),[X|_]).
 
 getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),
 			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),[X|_]).
 
-getClientePorId(Id,X) :- findall(cliente(Id,Nif,Encomenda),cliente(Id,Nif,Encomenda),[X|_]).
+getClientePorId(Id,X) :- findall(cliente(Id,Nome,Nif,Encomenda),cliente(Id,Nome,Nif,Encomenda),[X|_]).
 
+getAllClientesPorId(Id,X) :- findall(cliente(Id,Nome,Nif,Encomenda),cliente(Id,Nome,Nif,Encomenda),X).
+
+getEntregaPorIdEncomenda(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),[X|_]).
 
 % 3. Identificar os clientes servidos por um determinado estafeta (Nome -> [Clientes])--------------------------------------------------------------------------
-identificaClientesByEstafeta(Nome,NListaClientes) :- getEstafetaPorNome(Nome,estafeta(_,_,ListaEncomendas, _)),
+identificaClientesByEstafeta(Nome,NListaClientes) :- getEstafetaPorNome(Nome,estafeta(_,_,ListaEncomendas)),
 				      		    clientesListaEncomendas(ListaEncomendas,[],NListaIdClientes),
 				      		    constroiListaClienteDadoId(NListaIdClientes,[],NListaClientes).
 
@@ -94,4 +99,19 @@ constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePo
 							           adicionarElemLista(Cliente,ListaClientes,NListaClientes),
 						    		   constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
 
-%--------------------------------------------------------------------------------------------------------------------------------------------------------------
+% 6.Calcular a classificação média de satisfação de cliente para um determinado estafeta -----------------------------------------------------------------------
+
+%calcularRankingEstafetaPorCliente(IdCliente,Ranking) :- getAllClientePorId(Id,ListaCliente),
+%						        encomendasCliente(ListaCliente,[],ListaEncomendas),
+%						        calculaRanking(ListaEncomendas,Ranking).
+%						  
+%Transforma lista de clientes em lista de encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
+%encomendasCliente([],[],[]).
+%encomendasCliente([cliente(_,_,_,IdEncomenda)],ListaEncomendas,NListaEncomendas) :- adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas)).
+%encomendasCliente([cliente(_,_,_,Encomenda)|XS],ListaEncomendas,N2ListaEncomendas) :- adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas)).
+%										      encomendasCliente(XS,NListaEncomendas,N2ListaEncomendas).
+
+%Calcular o ranking
+%---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+

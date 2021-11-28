@@ -35,18 +35,21 @@ encomenda(3,2,3,3,24,6,1,2022).
 encomenda(4,7,43,4,16,8,1,203).
 
 %-----------------Clientes------------------
-%cliente(identificador,nif, encomenda)
-cliente(1,123456789, 1).
-cliente(2,023456789, 2).
-cliente(3,234234233, 3).
-cliente(4,197837476, 4).
+%cliente(identificador,nome,nif, idencomenda)
+cliente(1,'Sara Rodrigues',123456789, 1).
+cliente(2,'Henrique Marques',023456789, 2).
+cliente(3,'Leonor Losa',234234233, 3).
+cliente(4,'Inês Faria',197837476, 4).
 
 %-----------------Estafetas------------------
-%estafeta(identificador, nome, lista de encomendas, ranking 0-5)
-estafeta(1,'João',[1,3,4],3).
-estafeta(2,'Pedro',[2],4).
+%O ranking é calculado na função 6. com base na lista de encomendas
+%estafeta(identificador, nome, lista de encomendas)
+estafeta(1,'João',[1,3,4]).
+estafeta(2,'Pedro',[2]).
 
-%-----------------Estafetas------------------
-%entrega(identificador, estafeta, encomenda, data da entrega)
-entrega(1,1,1,dataEntrega(5,12,2021)).
-entrega(2,2,2,dataEntrega(2,12,2021)).
+%-----------------Entregas------------------
+%entrega(identificador, estafeta, encomenda, data da entrega,avaliação média 0-5)
+entrega(1,1,1,dataEntrega(5,12,2021),4).
+entrega(2,2,2,dataEntrega(2,12,2021),2).
+entrega(3,1,3,dataEntrega(3,12,2021),4).
+entrega(4,1,4,dataEntrega(4,12,2021),5).
