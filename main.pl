@@ -43,7 +43,7 @@ executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       identificaClientesByEstafeta(Nome,L),nl,
 		       write('[Lista de Clientes associados] ------------------'),nl,
 		       write('Identificador - Nome - NIF - Encomenda'),nl,
-		       printList(L),write('----------------------------------------------'),!.
+		       printList(L),write('--------------------------------------------------'),!.
 executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
@@ -52,19 +52,30 @@ executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
-executa(X) :- X =:= 9, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 9, getAllEntregas(LEntregas),
+		       getAllEncomendas(LEncomendas),
+		       statusEncomendas(LEncomendas,LEntregas,[],[],LEncNaoEntregues,LEncEntregues),
+		       write('[Lista de encomendas entregues] -----------------'),nl,
+		       printList(LEncEntregues),nl,
+		       write('[Lista de encomendas não entregues] -------------'),nl,
+		       printList(LEncNaoEntregues),
+		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 10, write('\u001b[31mNão implementado!\u001b[0m').
 executa(X) :- X =:= 11, halt.
 
 
 %Funções auxiliares gerais ------------------------------------------
 
+%Predicado not
+not(X) :- X, !, fail.
+not(_X).
+
 %Adicionar um elemento a uma lista
 adicionarElemLista(X,[],[X]).
 adicionarElemLista(X,L,[X|L]).
 
 %Fazer o print de uma lista
-printList([]).
+printList([]) :- write('Empty list'),nl.
 printList([X]) :- write(X),nl.
 printList([X|XS]) :- write(X),nl,printList(XS).
 printList(_) :- write('Not a list'),nl.
@@ -80,6 +91,11 @@ getClientePorId(Id,X) :- findall(cliente(Id,Nome,Nif,Encomenda),cliente(Id,Nome,
 getAllClientesPorId(Id,X) :- findall(cliente(Id,Nome,Nif,Encomenda),cliente(Id,Nome,Nif,Encomenda),X).
 
 getEntregaPorIdEncomenda(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),[X|_]).
+
+getAllEntregas(X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),X).
+
+getAllEncomendas(X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),
+			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),X).
 
 % 3. Identificar os clientes servidos por um determinado estafeta (Nome -> [Clientes])--------------------------------------------------------------------------
 identificaClientesByEstafeta(Nome,NListaClientes) :- getEstafetaPorNome(Nome,estafeta(_,_,ListaEncomendas)),
@@ -102,11 +118,11 @@ constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePo
 							            adicionarElemLista(Cliente,ListaClientes,NListaClientes),
 						    		    constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
 
-% 6.Calcular a classificação média de satisfação de cliente para um determinado estafeta -----------------------------------------------------------------------
+% 6.Calcular a classificação média de satisfação dos cliente para um determinado estafeta -----------------------------------------------------------------------
 
 calculaRankingEstafetaPorCliente(NomeEstafeta,Ranking) :- getEstafetaPorNome(NomeEstafeta,estafeta(_,_,ListaEncomendas)),
-							  	       calculaRanking(ListaEncomendas,SomaRanking,NumeroDeAval),
-							  	       Ranking is SomaRanking / NumeroDeAval.
+							  calculaRanking(ListaEncomendas,SomaRanking,NumeroDeAval),
+							  Ranking is SomaRanking / NumeroDeAval.
 
 						  
 %Transforma lista de clientes em lista de Id Encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
@@ -123,7 +139,18 @@ calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,e
 						       N2 is N + Avaliacao,
 						       C2 is C+1.
 						   
-						  
+% 9. Calcular o número de encomendas entregues e não entregues([Encomenda] -> [Entregas] -> [] -> [] -> [Encomendas Não Entregues] -> [Encomendas Entregues] ) -
+
+statusEncomendas([],[],[],[],[],[]).
+statusEncomendas([encomenda(Id,_,_,_,_,_,_,_)],LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues) :-
+					verificaEncomenda(Id,LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues).
+statusEncomendas([encomenda(Id,_,_,_,_,_,_,_)|XS],LIdEntregas,LEncEntregues,LEncNaoEntregues,N2LEncEntregues,N2LEncNaoEntregues) :- 
+					verificaEncomenda(Id,LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues),
+					statusEncomendas(XS,LIdEntregas,NLEncEntregues,NLEncNaoEntregues,N2LEncEntregues,N2LEncNaoEntregues).	
+														   
+verificaEncomenda(Id,ListaIdEntregas,LEncEntregues,_LEncNaoEntregues,NLEncEntregues,_NLEncNaoEntregues) :- member(Id,ListaIdEntregas),
+					 					adicionarElemLista(Id,LEncEntregues,NLEncEntregues).
+verificaEncomenda(Id,ListaIdEntregas,_LEncEntregues,LEncNaoEntregues,_NLEncEntregues,NLEncNaoEntregues) :- not(member(Id,ListaIdEntregas)),
+					 					adicionarElemLista(Id,LEncNaoEntregues,NLEncNaoEntregues).
+					 					
 %---------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
