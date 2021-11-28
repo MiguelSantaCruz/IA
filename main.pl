@@ -1,5 +1,9 @@
+#!/usr/bin/env swipl
+
 %carregar a base de conhecimento atual
 :- consult('baseDeConhecimento.pl').
+
+:- initialization(main, main).
 
 %Loop principal que implementa o menu de interação com a aplicação
 %Nota:\u001b[32m é o código de cor para verde, \u001b[34m é o código de cor para vermelho e \u001b[0m é o código de reset de cor
