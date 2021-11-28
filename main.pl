@@ -17,7 +17,7 @@ main :- repeat,
 	write('\u001b[34m[3]\u001b[0m Identificar os clientes servidos por um determinado estafeta'),nl,
 	write('\u001b[34m[4]\u001b[0m Calcular o valor faturado pela Green Distribution num determinado dia'),nl,
 	write('\u001b[34m[5]\u001b[0m Identificar as zonas com maior volume de entregas'),nl,
-	write('\u001b[34m[6]\u001b[0m Calcular a classificação média de satisfação de cliente para um determinado estafeta'),nl,
+	write('\u001b[34m[6]\u001b[0m Calcular a classificação média de satisfação dos cliente para um determinado estafeta'),nl,
 	write('\u001b[34m[7]\u001b[0m Número total de entregas pelos diferentes meios de transporte num intervalo de tempo'),nl,
 	write('\u001b[34m[8]\u001b[0m Número total de entregas por estafetas, num intervalo de tempo'),nl,
 	write('\u001b[34m[9]\u001b[0m Calcular o número de encomendas entregues e não entregues'),nl,
@@ -46,7 +46,10 @@ executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       printList(L),write('----------------------------------------------'),!.
 executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
-executa(X) :- X =:= 6, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
+		       read(Nome),
+		       calculaRankingEstafetaPorCliente(Nome,Ranking),nl,
+		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 9, write('\u001b[31mNão implementado!\u001b[0m'). 
@@ -80,38 +83,47 @@ getEntregaPorIdEncomenda(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data
 
 % 3. Identificar os clientes servidos por um determinado estafeta (Nome -> [Clientes])--------------------------------------------------------------------------
 identificaClientesByEstafeta(Nome,NListaClientes) :- getEstafetaPorNome(Nome,estafeta(_,_,ListaEncomendas)),
-				      		    clientesListaEncomendas(ListaEncomendas,[],NListaIdClientes),
-				      		    constroiListaClienteDadoId(NListaIdClientes,[],NListaClientes).
+				      		     clientesListaEncomendas(ListaEncomendas,[],NListaIdClientes),
+				      		     constroiListaClienteDadoId(NListaIdClientes,[],NListaClientes).
 
 %Função que dada uma lista de encomendas devolve uma lista de Ids de clientes associados ([Encomenda] -> [Lista de Ids Clientes Inicial ([])] -> [Id de Cliente])
 clientesListaEncomendas([],[],[]).
 clientesListaEncomendas([IdEncomenda],ListaIdClientes,NListaIdClientes) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,IdCliente,_,_,_,_)),
 							  		   adicionarElemLista(IdCliente,ListaIdClientes,NListaIdClientes).
 clientesListaEncomendas([X|XS],ListaIdClientes,N2ListaIdClientes) :- getEncomendaPorId(X,encomenda(_,_,_,IdCliente,_,_,_,_)),
-						 		    adicionarElemLista(IdCliente,ListaIdClientes,NListaIdClientes),
-						                    clientesListaEncomendas(XS,NListaIdClientes,N2ListaIdClientes).
+						 		     adicionarElemLista(IdCliente,ListaIdClientes,NListaIdClientes),
+						                     clientesListaEncomendas(XS,NListaIdClientes,N2ListaIdClientes).
 
 %Função que dada uma lista de Ids de cliente devolve a lista de clientes ([Id Cliente] -> [Lista de Clientes Inicial ([])] -> [Cliente])
 constroiListaClienteDadoId([],[],[]).
 constroiListaClienteDadoId([Id],ListaClientes,NListaClientes) :- getClientePorId(Id,Cliente),
 								 adicionarElemLista(Cliente,ListaClientes,NListaClientes).
 constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePorId(X,Cliente),
-							           adicionarElemLista(Cliente,ListaClientes,NListaClientes),
-						    		   constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
+							            adicionarElemLista(Cliente,ListaClientes,NListaClientes),
+						    		    constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
 
 % 6.Calcular a classificação média de satisfação de cliente para um determinado estafeta -----------------------------------------------------------------------
 
-%calcularRankingEstafetaPorCliente(IdCliente,Ranking) :- getAllClientePorId(Id,ListaCliente),
-%						        encomendasCliente(ListaCliente,[],ListaEncomendas),
-%						        calculaRanking(ListaEncomendas,Ranking).
-%						  
-%Transforma lista de clientes em lista de encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
-%encomendasCliente([],[],[]).
-%encomendasCliente([cliente(_,_,_,IdEncomenda)],ListaEncomendas,NListaEncomendas) :- adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas)).
-%encomendasCliente([cliente(_,_,_,Encomenda)|XS],ListaEncomendas,N2ListaEncomendas) :- adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas)).
-%										      encomendasCliente(XS,NListaEncomendas,N2ListaEncomendas).
+calculaRankingEstafetaPorCliente(NomeEstafeta,Ranking) :- getEstafetaPorNome(NomeEstafeta,estafeta(_,_,ListaEncomendas)),
+							  	       calculaRanking(ListaEncomendas,SomaRanking,NumeroDeAval),
+							  	       Ranking is SomaRanking / NumeroDeAval.
 
-%Calcular o ranking
+						  
+%Transforma lista de clientes em lista de Id Encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
+encomendasCliente([],[],[]).
+encomendasCliente([cliente(_,_,_,IdEncomenda)],ListaEncomendas,NListaEncomendas) :- adicionarElemLista(IdEncomenda,ListaEncomendas,NListaEncomendas).
+encomendasCliente([cliente(_,_,_,IdEncomenda)|XS],ListaEncomendas,N2ListaEncomendas) :- adicionarElemLista(IdEncomenda,ListaEncomendas,NListaEncomendas),
+										      encomendasCliente(XS,NListaEncomendas,N2ListaEncomendas).
+
+%Calcular o ranking ([Id Encomenda] -> Soma dos Rankings -> Número de Ranking)
+calculaRanking([],0,0).
+calculaRanking([IdEncomenda],Avaliacao,1) :- getEntregaPorIdEncomenda(IdEncomenda,entrega(_,_,_,_,Avaliacao)).
+calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,entrega(_,_,_,_,Avaliacao)), 
+						       calculaRanking(XS,N,C),
+						       N2 is N + Avaliacao,
+						       C2 is C+1.
+						   
+						  
 %---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
