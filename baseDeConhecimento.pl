@@ -5,12 +5,12 @@
 
 
 
-:- dynamic (transporte/3).
-:- dynamic (rua/3).
-:- dynamic (encomenda/2).
-:- dynamic (cliente/2).
-:- dynamic (estafeta/2).
-:- dynamic (entrega/2).
+%:- dynamic (transporte/3).
+%:- dynamic (rua/3).
+%:- dynamic (encomenda/2).
+%:- dynamic (cliente/2).
+%:- dynamic (estafeta/2).
+%:- dynamic (entrega/2).
 
 
 %BASE DO CONHECIMENTO
@@ -31,15 +31,19 @@ rua(3,'Açúcar','Oleiros',2).
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço)
 encomenda(1,5,53,1,6,1,1,20).
 encomenda(2,13,20,2,12,3,2,30).
+encomenda(3,2,3,3,24,6,1,2022).
+encomenda(4,7,43,4,16,8,1,203).
 
 %-----------------Clientes------------------
 %cliente(identificador,nif, encomenda)
 cliente(1,123456789, 1).
 cliente(2,023456789, 2).
+cliente(3,234234233, 3).
+cliente(4,197837476, 4).
 
 %-----------------Estafetas------------------
 %estafeta(identificador, nome, lista de encomendas, ranking 0-5)
-estafeta(1,'João',[1],3).
+estafeta(1,'João',[1,3,4],3).
 estafeta(2,'Pedro',[2],4).
 
 %-----------------Estafetas------------------

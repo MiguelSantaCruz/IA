@@ -1,9 +1,11 @@
-#!/usr/bin/env swipl
+%Retirar de comentário estas linhas para correr como um programa nativo no linux ./main.pl
+
+%#!/usr/bin/env swipl
+%:- initialization(main, main).
+
 
 %carregar a base de conhecimento atual
 :- consult('baseDeConhecimento.pl').
-
-:- initialization(main, main).
 
 %Loop principal que implementa o menu de interação com a aplicação
 %Nota:\u001b[32m é o código de cor para verde, \u001b[34m é o código de cor para vermelho e \u001b[0m é o código de reset de cor
@@ -19,9 +21,10 @@ main :- repeat,
 	write('\u001b[34m[7]\u001b[0m Número total de entregas pelos diferentes meios de transporte num intervalo de tempo'),nl,
 	write('\u001b[34m[8]\u001b[0m Número total de entregas por estafetas, num intervalo de tempo'),nl,
 	write('\u001b[34m[9]\u001b[0m Calcular o número de encomendas entregues e não entregues'),nl,
-	write('\u001b[34m[10]\u001b[0m Calcular o peso total transportado por estafeta num determinado dia.'),nl,
+	write('\u001b[34m[10]\u001b[0m Calcular o peso total transportado por estafeta num determinado dia'),nl,
+	write('\u001b[34m[11]\u001b[0m Sair'),nl,
 	nl,
-	write('Insira escolha: '),
+	write('Insira escolha: '),nl,
 	read(Escolha),
 	validaEscolha(Escolha),
 	executa(Escolha),
@@ -29,17 +32,66 @@ main :- repeat,
  
 %Função que valida as escolhas feitas( se estão entre 1 e 10)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
-validaEscolha(X) :- X > 10,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
+validaEscolha(X) :- X > 11,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
 executa(X) :- X =:= 1, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 2, write('\u001b[31mNão implementado!\u001b[0m').  
-executa(X) :- X =:= 3, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
+		       read(Nome),
+		       identificaClientesByEstafeta(Nome,L),nl,write('[Lista de Clientes associados] ------------------'),nl,
+		       printList(L),write('----------------------------------------------'),!.
 executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 6, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 9, write('\u001b[31mNão implementado!\u001b[0m'). 
-executa(X) :- X =:= 10, write('\u001b[31mNão implementado!\u001b[0m').  
+executa(X) :- X =:= 10, write('\u001b[31mNão implementado!\u001b[0m').
+executa(X) :- X =:= 11, halt.
+
+
+%Funções auxiliares gerais ------------------------------------------
+
+%Adicionar um elemento a uma lista
+adicionarElemLista(X,[],[X]).
+adicionarElemLista(X,L,[X|L]).
+
+%Fazer o print de uma lista
+printList([]).
+printList([X]) :- write(X),nl.
+printList([X|XS]) :- write(X),nl,printList(XS).
+printList(_) :- write('Not a list'),nl.
+
+%Getters
+getEstafetaPorNome(Nome,X) :-  findall(estafeta(Id,Nome,Encomendas, Ranking),estafeta(Id,Nome,Encomendas, Ranking),[X|_]).
+
+getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),
+			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco),[X|_]).
+
+getClientePorId(Id,X) :- findall(cliente(Id,Nif,Encomenda),cliente(Id,Nif,Encomenda),[X|_]).
+
+
+% 3. Identificar os clientes servidos por um determinado estafeta (Nome -> [Clientes])--------------------------------------------------------------------------
+identificaClientesByEstafeta(Nome,NListaClientes) :- getEstafetaPorNome(Nome,estafeta(_,_,ListaEncomendas, _)),
+				      		    clientesListaEncomendas(ListaEncomendas,[],NListaIdClientes),
+				      		    constroiListaClienteDadoId(NListaIdClientes,[],NListaClientes).
+
+%Função que dada uma lista de encomendas devolve uma lista de Ids de clientes associados ([Encomenda] -> [Lista de Ids Clientes Inicial ([])] -> [Id de Cliente])
+clientesListaEncomendas([],[],[]).
+clientesListaEncomendas([IdEncomenda],ListaIdClientes,NListaIdClientes) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,IdCliente,_,_,_,_)),
+							  		   adicionarElemLista(IdCliente,ListaIdClientes,NListaIdClientes).
+clientesListaEncomendas([X|XS],ListaIdClientes,N2ListaIdClientes) :- getEncomendaPorId(X,encomenda(_,_,_,IdCliente,_,_,_,_)),
+						 		    adicionarElemLista(IdCliente,ListaIdClientes,NListaIdClientes),
+						                    clientesListaEncomendas(XS,NListaIdClientes,N2ListaIdClientes).
+
+%Função que dada uma lista de Ids de cliente devolve a lista de clientes ([Id Cliente] -> [Lista de Clientes Inicial ([])] -> [Cliente])
+constroiListaClienteDadoId([],[],[]).
+constroiListaClienteDadoId([Id],ListaClientes,NListaClientes) :- getClientePorId(Id,Cliente),
+								 adicionarElemLista(Cliente,ListaClientes,NListaClientes).
+constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePorId(X,Cliente),
+							           adicionarElemLista(Cliente,ListaClientes,NListaClientes),
+						    		   constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
+
+%--------------------------------------------------------------------------------------------------------------------------------------------------------------
