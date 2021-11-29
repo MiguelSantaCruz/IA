@@ -54,17 +54,12 @@ executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa) :'),nl,
 		       read(DiaInicial-MesInicial-AnoInicial),nl,
-		       write('Dia: '),write(DiaInicial),nl,
-		       write('Mes: '),write(MesInicial),nl,
-		       write('Ano: '),write(AnoInicial),nl,
 		       write('Insira data final (dd-mm-aaaa) :'),nl,
 		       read(DiaFinal-MesFinal-AnoFinal),nl,
-		       write('Dia: '),write(DiaFinal),nl,
-		       write('Mes: '),write(MesFinal),nl,
-		       write('Ano: '),write(AnoFinal),nl,
-		       getAllEntregas(LEntregas),
+		       getAllEntregas(LEntregas),	
+		       filtraEntregasData(LEntregas, data(DiaInicial,MesInicial,AnoInicial), data(DiaFinal,MesFinal,AnoFinal), [], ListaEntregasData),
 		       getAllEncomendas(LEncomendas),
-		       statusEncomendas(LEncomendas,LEntregas,[],[],LEncNaoEntregues,LEncEntregues),
+		       statusEncomendas(LEncomendas,ListaEntregasData,[],[],LEncNaoEntregues,LEncEntregues),
 		       listIdToEncomenda(LEncEntregues,[],ListaEncomendasEntregues),
 		       listIdToEncomenda(LEncNaoEntregues,[],ListaEncomendasNaoEntregues),nl,
 		       write('\u001b[35m[Lista de encomendas entregues]\u001b[0m -----------------'),nl,
@@ -100,12 +95,14 @@ listIdToEncomenda([Id|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorI
 							        adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas),
 							        listIdToEncomenda(XS,NListaEncomendas,N2ListaEncomendas).
 
-%Filtra entregas por data
-%filtraEntregasData([],DataInicial,DataFinal,[]).
-%filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,dataEntrega(Dia-Mes-Ano,Avaliacao)],DiaInicial,DiaFinal,MesInicial,MesFinal,AnoInicial,AnoFinal,NListaEntregas) :- 
-									
-%filtraEntregasData(ListaEntregas,DataInicial,DataFinal,NListaEntregas) :- 
-
+%Filtra entregas por data ([Entrega] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [Encomendas] -> [Encomedas])
+filtraEntregasData([],_,_,[],[]).
+filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,_)],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :- comparaData(Data,DataInicial,DataFinal),
+								    adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data),ListEncomendas,NListEncomendas).
+filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,_)|XS],DataInicial,DataFinal,ListEncomendas,N2ListEncomendas) :- 
+								    adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data),ListEncomendas,NListEncomendas),
+								    filtraEntregasData(XS,DataInicial,DataFinal,NListEncomendas,N2ListEncomendas).
+								    
 %Verifica se uma dada data está entre outras duas (data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> {V,F})
 comparaData(data(Dia,_,_),_,_) :- Dia =< 0, fail,!.
 comparaData(data(Dia,_,_),_,_) :- Dia > 31, fail,!.
