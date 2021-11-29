@@ -49,7 +49,7 @@ estafeta(2,'Pedro',[2]).
 
 %-----------------Entregas------------------
 %entrega(identificador, estafeta, encomenda, data da entrega,avaliação média 0-5)
-entrega(1,1,1,dataEntrega(5,12,2021),4).
-entrega(2,2,2,dataEntrega(2,12,2021),2).
-entrega(3,1,3,dataEntrega(3,12,2021),4).
-entrega(4,1,4,dataEntrega(4,12,2021),5).
+entrega(1,1,1,data(5,12,2021),4).
+entrega(2,2,2,data(2,12,2021),2).
+entrega(3,1,3,data(3,12,2021),4).
+entrega(4,1,4,data(4,12,2021),5).

@@ -41,7 +41,7 @@ executa(X) :- X =:= 2, write('\u001b[31mNão implementado!\u001b[0m').
 executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       read(Nome),
 		       identificaClientesByEstafeta(Nome,L),nl,
-		       write('[Lista de Clientes associados] ------------------'),nl,
+		       write('\u001b[35m[Lista de Clientes associados]\u001b[0m ------------------'),nl,
 		       write('Identificador - Nome - NIF - Encomenda'),nl,
 		       printList(L),write('--------------------------------------------------'),!.
 executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
@@ -52,13 +52,25 @@ executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
-executa(X) :- X =:= 9, getAllEntregas(LEntregas),
+executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa) :'),nl,
+		       read(DiaInicial-MesInicial-AnoInicial),nl,
+		       write('Dia: '),write(DiaInicial),nl,
+		       write('Mes: '),write(MesInicial),nl,
+		       write('Ano: '),write(AnoInicial),nl,
+		       write('Insira data final (dd-mm-aaaa) :'),nl,
+		       read(DiaFinal-MesFinal-AnoFinal),nl,
+		       write('Dia: '),write(DiaFinal),nl,
+		       write('Mes: '),write(MesFinal),nl,
+		       write('Ano: '),write(AnoFinal),nl,
+		       getAllEntregas(LEntregas),
 		       getAllEncomendas(LEncomendas),
 		       statusEncomendas(LEncomendas,LEntregas,[],[],LEncNaoEntregues,LEncEntregues),
-		       write('[Lista de encomendas entregues] -----------------'),nl,
-		       printList(LEncEntregues),nl,
-		       write('[Lista de encomendas não entregues] -------------'),nl,
-		       printList(LEncNaoEntregues),
+		       listIdToEncomenda(LEncEntregues,[],ListaEncomendasEntregues),
+		       listIdToEncomenda(LEncNaoEntregues,[],ListaEncomendasNaoEntregues),nl,
+		       write('\u001b[35m[Lista de encomendas entregues]\u001b[0m -----------------'),nl,
+		       printList(ListaEncomendasEntregues),nl,
+		       write('\u001b[35m[Lista de encomendas não entregues]\u001b[0m -------------'),nl,
+		       printList(ListaEncomendasNaoEntregues),
 		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 10, write('\u001b[31mNão implementado!\u001b[0m').
 executa(X) :- X =:= 11, halt.
@@ -75,10 +87,41 @@ adicionarElemLista(X,[],[X]).
 adicionarElemLista(X,L,[X|L]).
 
 %Fazer o print de uma lista
-printList([]) :- write('Empty list'),nl.
+printList([]) :- write('Sem Elementos'),nl.
 printList([X]) :- write(X),nl.
 printList([X|XS]) :- write(X),nl,printList(XS).
-printList(_) :- write('Not a list'),nl.
+printList(_) :- write('Não é lista'),nl.
+
+%Transformar lista de Id encomendas em lista de encomendas ([Id Encomenda] -> [](Lista auxiliar inicial) -> [Encomenda])
+
+listIdToEncomenda([],[],[]).
+listIdToEncomenda([Id],ListaEncomendas,NListaEncomendas) :- getEncomendaPorId(Id,Encomenda), adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas).
+listIdToEncomenda([Id|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorId(Id,Encomenda), 
+							        adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas),
+							        listIdToEncomenda(XS,NListaEncomendas,N2ListaEncomendas).
+
+%Filtra entregas por data
+%filtraEntregasData([],DataInicial,DataFinal,[]).
+%filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,dataEntrega(Dia-Mes-Ano,Avaliacao)],DiaInicial,DiaFinal,MesInicial,MesFinal,AnoInicial,AnoFinal,NListaEntregas) :- 
+									
+%filtraEntregasData(ListaEntregas,DataInicial,DataFinal,NListaEntregas) :- 
+
+%Verifica se uma dada data está entre outras duas (data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> {V,F})
+comparaData(data(Dia,_,_),_,_) :- Dia =< 0, fail,!.
+comparaData(data(Dia,_,_),_,_) :- Dia > 31, fail,!.
+comparaData(_,data(DiaInicial,_,_),_) :- DiaInicial =< 0, fail,!.
+comparaData(_,data(DiaInicial,_,_),_) :- DiaInicial > 31, fail,!.
+comparaData(_,_,data(DiaFinal,_,_)) :- DiaFinal =< 0, fail,!.
+comparaData(_,_,data(DiaFinal,_,_)) :- DiaFinal > 31, fail,!.
+comparaData(data(_,Mes,_),_,_) :- Mes =< 0, fail,!.
+comparaData(data(_,Mes,_),_,_) :- Mes > 12, fail,!.
+comparaData(_,data(_,MesInicial,_),_) :- MesInicial =< 0, fail,!.
+comparaData(_,data(_,MesInicial,_),_) :- MesInicial > 12, fail,!.
+comparaData(_,_,data(_,MesFinal,_)) :- MesFinal =< 0, fail,!.
+comparaData(_,_,data(_,MesFinal,_)) :- MesFinal > 12, fail,!. 
+comparaData(data(_,_,Ano),data(_,_,AnoInicial),data(_,_,AnoFinal)) :- Ano > AnoInicial,	Ano < AnoFinal.
+comparaData(data(_,Mes,_),data(_,MesInicial,_),data(_,MesFinal,_)) :- Mes > MesInicial,	Mes < MesFinal.
+comparaData(data(Dia,_,_),data(DiaInicial,_,_),data(DiaFinal,_,_)) :- Dia >= DiaInicial, Dia =< DiaFinal.
 
 %Getters
 getEstafetaPorNome(Nome,X) :-  findall(estafeta(Id,Nome,Encomendas),estafeta(Id,Nome,Encomendas),[X|_]).
