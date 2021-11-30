@@ -28,11 +28,11 @@ rua(2,'Sete Céus','Lindoso',5).
 rua(3,'Açúcar','Oleiros',2).
 
 %-----------------Encomendas------------------
-%encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço)
-encomenda(1,5,53,1,6,1,1,20).
-encomenda(2,13,20,2,12,3,2,30).
-encomenda(3,2,3,3,24,6,1,2022).
-encomenda(4,7,43,4,16,8,1,203).
+%encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço,data de encomenda)
+encomenda(1,5,53,1,6,1,1,20,data(5,12,2021,07,00)).
+encomenda(2,13,20,2,12,3,2,30,data(1,12,2021,01,00)).
+encomenda(3,2,3,3,24,6,1,2022,data(2,12,2021,19,00)).
+encomenda(4,7,43,4,16,8,1,203,data(3,12,2021,08,00)).
 
 %-----------------Clientes------------------
 %cliente(identificador,nome,nif, idencomenda)
@@ -48,8 +48,8 @@ estafeta(1,'João',[1,3,4]).
 estafeta(2,'Pedro',[2]).
 
 %-----------------Entregas------------------
-%entrega(identificador, estafeta, encomenda, data da entrega,avaliação média 0-5)
-entrega(1,1,1,data(5,12,2021),4).
-entrega(2,2,2,data(2,12,2021),2).
-entrega(3,1,3,data(3,12,2021),4).
-entrega(4,1,4,data(4,12,2021),5).
+%entrega(identificador, IdEstafeta, encomenda, data da entrega,avaliação média 0-5)
+entrega(1,1,1,data(5,12,2021,13,00),4).
+entrega(2,2,2,data(2,12,2021,14,30),2).
+entrega(3,1,3,data(3,12,2021,09,30),4).
+entrega(4,1,4,data(4,12,2021,17,50),5).
