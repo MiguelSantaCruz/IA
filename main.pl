@@ -265,3 +265,22 @@ verificaEncomenda(Id,ListaIdEntregas,LEncEntregues,_LEncNaoEntregues,NLEncEntreg
 verificaEncomenda(Id,_,_LEncEntregues,LEncNaoEntregues,_NLEncEntregues,NLEncNaoEntregues) :- adicionarElemLista(Id,LEncNaoEntregues,NLEncNaoEntregues),!.
 					 					
 %---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+%10 calcular o peso total transportado por estafeta num determinado dia
+
+pesoTotalNumDia(IdEstafeta,Dia,Res):- listaEntregasNumDia(IdEstafeta,Dia,ListaIdEncomendas),
+									listaEntregasParaPeso(ListaIdEncomendas,Res).
+
+
+listaEntregasNumDia(Id,Data,Res) :- findall(Encomenda, (entrega(_,Id,Encomenda,D,_),dataSimples(D,Data)),Res).
+
+
+listaEntregasParaPeso([],0).
+listaEntregasParaPeso([H],PesoTotal):- encomenda(H,Peso,_,_,_,_,_,_,_),
+									PesoTotal is Peso.
+listaEntregasParaPeso([H|T],PesoTotal):- listaEntregasParaPeso([H],Peso1),
+										listaEntregasParaPeso(T,Peso2),
+										PesoTotal is Peso1 + Peso2.
+										
+dataSimples(data(Dia,Mes,Ano,_,_),data(Dia2,Mes2,Ano2,_,_)) :- Dia == Dia2, Mes == Mes2 , Ano == Ano2.
+
