@@ -91,7 +91,12 @@ executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       write('\u001b[35m[Lista de encomendas não entregues]\u001b[0m -------------'),nl,
 		       printList(ListaEncomendasNaoEntregues),
 		       write('----------------------------------------------'),nl,!.
-executa(X) :- X =:= 10, write('\u001b[31mNão implementado!\u001b[0m').
+executa(X) :- X =:= 10, nl,write('Insira ID Estafeta :'),nl,
+						read(IDestafeta),nl,
+						write('Insira dia data(dd,mm,aaaa,hh,mm)  :'),nl,
+						read(Dia),nl,
+						pesoTotalNumDia(IDestafeta,Dia,Resultado),nl,
+						write('Peso total :'),write(Resultado),nl,!.
 executa(X) :- X =:= 11, halt.
 
 
