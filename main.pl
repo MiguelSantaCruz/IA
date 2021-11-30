@@ -55,8 +55,8 @@ executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
-executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa) :'),nl,
-		       read(DiaInicial-MesInicial-AnoInicial,HoraInicial,MinutoInicial),nl,
+executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
+		       read(DiaInicial-MesInicial-AnoInicial-HoraInicial-MinutoInicial),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaFinal-MesFinal-AnoFinal-HoraFinal-MinutoFinal),nl,
 		       getAllEntregas(LEntregas),	
