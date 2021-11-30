@@ -196,9 +196,9 @@ listaIdEncomendasToListEncomendas([IdEncomenda|T],ListaEncomendas,N2ListaEncomen
 
 
 listaIdEstafetasbyListaEncomendas([],[],[]).
-listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _)],ListaEstafetas,NListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
+listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _,_)],ListaEstafetas,NListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
 											adicionarElemLista(IdEstafeta,ListaEstafetas,NListaEstafetas).
-listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _)| T ],ListaEstafetas,N2ListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
+listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _,_)| T ],ListaEstafetas,N2ListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
 											adicionarElemLista(IdEstafeta,ListaEstafetas,NListaEstafetas),
 											listaIdEstafetasbyListaEncomendas(T,NListaEstafetas,N2ListaEstafetas).
 
