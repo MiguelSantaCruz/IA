@@ -100,10 +100,10 @@ executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 10, nl,write('Insira ID Estafeta :'),nl,
 						read(IDestafeta),nl,
-						write('Insira dia data(dd,mm,aaaa,hh,mm)  :'),nl,
-						read(Dia),nl,
-						pesoTotalNumDia(IDestafeta,Dia,Resultado),nl,
-						write('Peso total :'),write(Resultado),nl,
+						write('Insira dia-mes-ano)  :'),nl,
+						read(Dia-Mes-Ano),nl,
+						pesoTotalNumDia(IDestafeta,data(Dia,Mes,Ano,0,0),Resultado),nl,
+						write('Peso total: '),write(Resultado),nl,
 						write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 11, halt.
 
@@ -375,7 +375,7 @@ numeroEntregasEstafeta([estafeta(_,_,Encomendas)|XS], DataInicio, DataFim, N2) :
                                     numeroEntregasEstafeta(XS, DataInicio, DataFim, N),
                                     length(ListaEntregas, X),
                                     N2 is N + X.
-									
+
 verificaEntregas([Id],LIdentregas,Lista, LEntregues) :-  member(Id,LIdentregas),
                             adicionarElemLista(Id,Lista,LEntregues),!.
 verificaEntregas([Id],LIdentregas,Lista, Lista).
