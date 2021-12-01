@@ -92,7 +92,8 @@ executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       filtraEntregasData(LEntregas, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), [], ListaEntregasData),
 		       converteListaEntregasToListaEncomendas(ListaEntregasData,[],ListaEncomendasEntregues),
 		       getAllEncomendas(LEncomendas),
-		       getEncomendasNaoEntregues(LEncomendas,ListaEncomendasEntregues,[],ListaEncomendasNaoEntregues),nl,	       
+		       filtraEncomendasData(LEncomendas,data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal),[],LEncomendasData),
+		       getEncomendasNaoEntregues(LEncomendasData,ListaEncomendasEntregues,[],ListaEncomendasNaoEntregues),nl,	       
 		       write('\u001b[35m[Lista de encomendas entregues]\u001b[0m -----------------'),nl,
 		       printList(ListaEncomendasEntregues),nl,
 		       write('\u001b[35m[Lista de encomendas não entregues]\u001b[0m -------------'),nl,
@@ -134,7 +135,7 @@ listIdToEncomenda([Id|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorI
 
 
 
-%Filtra entregas por data ([Entrega] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [Encomendas] -> [Encomedas])
+%Filtra entregas por data ([Entrega] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [] -> [Entregas])
 filtraEntregasData([],_,_,[],[]).
 filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :- 
 						comparaData(Data,DataInicial,DataFinal),
@@ -146,6 +147,20 @@ filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)|XS],DataIn
 					        filtraEntregasData(XS,DataInicial,DataFinal,NListEncomendas,N2ListEncomendas).
 filtraEntregasData([entrega(_,_,_,_,_)|XS],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :-
 					       filtraEntregasData(XS,DataInicial,DataFinal,ListEncomendas,NListEncomendas).  								    
+%Filtra encomenda por data ([Encomendas] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [] -> [Encomedas])
+filtraEncomendasData([],_,[],[]).
+filtraEncomendasData([encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data)],DataInicial,ListEncomendas,NListEncomendas) :- 
+						dataAnterior(Data,DataInicial),
+					        adicionarElemLista(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),ListEncomendas,NListEncomendas),!.
+filtraEncomendasData([_],_,ListEncomendas,ListEncomendas).	
+filtraEncomendasData([encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data)|XS],DataInicial,ListEncomendas,N2ListEncomendas) :- 
+						dataAnterior(Data,DataInicial),
+						adicionarElemLista(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),ListEncomendas,NListEncomendas),
+					        filtraEncomendasData(XS,DataInicial,NListEncomendas,N2ListEncomendas).
+filtraEncomendasData([_|XS],DataInicial,ListEncomendas,NListEncomendas) :-
+					       	filtraEncomendasData(XS,DataInicial,ListEncomendas,NListEncomendas).
+					       	
+					       	
 %Verifica se uma dada data está entre outras duas (data(Dia,Mes,Ano,Hora,Minuto) -> data(Dia,Mes,Ano,Hora,Minuto) -> data(Dia,Mes,Ano,Hora,Minuto) -> {V,F})
 %comparaData(data(Dia,_,_,_,_),_,_) :- Dia =< 0, !,fail.
 %comparaData(data(Dia,_,__,_),_,_) :- Dia > 31, !,fail.
@@ -170,6 +185,14 @@ comparaData(data(Dia,_,_,Hora,_),data(_,_,_,_,_),data(DiaFinal,_,_,HoraFinal,_))
 comparaData(data(_,_,_,Hora,Minuto),data(_,_,_,_,MinutoInicial),data(_,_,_,HoraFinal,_)) :- Hora =:= HoraFinal, Minuto < MinutoInicial,!,fail.
 comparaData(data(_,_,_,Hora,Minuto),data(_,_,_,_,_),data(_,_,_,HoraFinal,MinutoFinal)) :-  Hora =:= HoraFinal, Minuto > MinutoFinal,!,fail.
 comparaData(_,_,_).
+
+%Diz se uma data é anterior a outra
+dataAnterior(data(_,_,Ano,_,_),data(_,_,AnoFinal,_,_)) :- Ano > AnoFinal,!,fail.
+dataAnterior(data(_,Mes,_,_,_),data(_,MesFinal,_,_,_)) :- Mes > MesFinal,!,fail.
+dataAnterior(data(Dia,_,_,_,_),data(DiaFinal,_,_,_,_)) :- Dia > DiaFinal,!,fail.
+dataAnterior(data(Dia,_,_,Hora,_),data(DiaFinal,_,_,HoraFinal,_)) :- Dia =:= DiaFinal, Hora > HoraFinal,!,fail.
+dataAnterior(data(_,_,_,Hora,Minuto),data(_,_,_,HoraFinal,MinutoFinal)) :- Hora =:= HoraFinal,Minuto > MinutoFinal,!,fail.
+dataAnterior(_,_).
 
 converteListaEntregasToListaIdEncomendas([],[],[]).
 converteListaEntregasToListaIdEncomendas([entrega(_,_,IdEncomenda,_,_)],ListaEncomendas,NListaEncomendas) :-
@@ -411,8 +434,7 @@ getEncomendasNaoEntregues([],[],[],[]).
 getEncomendasNaoEntregues([X],ListaEncomendasEntregues,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues) :- 
 						not(member(X,ListaEncomendasEntregues)),
 						adicionarElemLista(X,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues),!.
-getEncomendasNaoEntregues([_],_,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues) :- 
-						NListaEncomendasNaoEntregues is ListaEncomendasNaoEntregues,!.					    
+getEncomendasNaoEntregues([_],_,ListaEncomendasNaoEntregues,ListaEncomendasNaoEntregues).				    
 getEncomendasNaoEntregues([X|XS],ListaEncomendasEntregues,ListaEncomendasNaoEntregues,N2ListaEncomendasNaoEntregues) :- 
 						not(member(X,ListaEncomendasEntregues)),
 		              			adicionarElemLista(X,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues),
