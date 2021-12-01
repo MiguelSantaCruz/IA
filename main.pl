@@ -81,7 +81,7 @@ executa(X) :- X =:= 8, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
                write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
                read(DiaFinal-MesFinal-AnoFinal-HFinal-MFinal),nl, 
                getAllEstafetas(Estafetas),
-               numeroEntregasEstafeta(Estafeta, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), N),
+               numeroEntregasEstafeta(Estafetas, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), N),
                write(N),
                write('----------------------------------------------'),nl,!.  
 executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
@@ -192,6 +192,10 @@ getEntregaPorIdEncomenda(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data
 getListIDEncomendaPorIdCliente(Id,X) :- findall(IdEncomenda,cliente(Id,_,_, IdEncomenda),X).
 
 getIdEstafetaPorIdEncomenda(Id,X) :- findall(IdEstafeta,entrega(_, IdEstafeta, Id , _,_),[X|_]).
+
+getAllEstafetas(X) :- findall(estafeta(ID,Nome,Encomendas),estafeta(ID,Nome,Encomendas),X).
+
+getEntregaPorId(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),X).
 
 getEstafetaPorID(ID,X) :-  findall(estafeta(ID,Nome,Encomendas),estafeta(ID,Nome,Encomendas),[X|_]).
 
