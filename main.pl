@@ -59,7 +59,7 @@ executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       calculaRankingEstafetaPorCliente(Nome,Ranking),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
-		        read(DiaInicial-MesInicial-AnoInicial-Hi-MinI),nl,
+		       read(DiaInicial-MesInicial-AnoInicial-Hi-MinI),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaFinal-MesFinal-AnoFinal,Hf,MinF),nl,
 		       filtra(data(DiaInicial,MesInicial,AnoInicial,Hi,MinI), data(DiaFinal,MesFinal,AnoFinal,Hf,MinF),LEnt),
@@ -196,7 +196,7 @@ getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 
 nomeESt([],[]).
 nomeESt([H|T],L):-findall((H,Nome),estafeta(H,Nome,_),[S|_]),
-                  nomeES(T,Z),
+                  nomeESt(T,Z),
                L = [S|Z].
 
 estMaisEco(Max,IdNomes):- findall((IdStaff,Lenc),estafeta(IdStaff,_,Lenc),L),
@@ -212,7 +212,7 @@ estAux(Max,[(IdEst,Lenc)|T],L):- estCount(Lenc,Count),
                         (Count > CountMax -> Max = Count, L = [IdEst];
                          Count == CountMax -> Max = CountMax, L = [IdEst|Ls]; Max = CountMax, L = Ls).
 
-estCount([Idenc|T],X):- findall(Trans,encomenda(Idenc,_,_,_,_,_,Trans,_),L),
+estCount([Idenc|T],X):- findall(Trans,encomenda(Idenc,_,_,_,_,_,Trans,_,_),L),
                               soma(L,X).
 soma([],0).
 soma([H|T],S):-soma(T,G),S is H+G.
@@ -283,13 +283,13 @@ constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePo
 % 4. Calcular o valor faturado pela Green Distribution num determinado dia--------------------------------------------------------------------------
 
 
-calculaF(Dia,Vfaturado):- findall(IdEncomenda,entrega(_,_,IdEncomenda,Dia,_),X),
+calculaF(data(D,M,A,Ho,Min),Vfaturado):- findall(IdEncomenda,(entrega(_,_,IdEncomenda,data(D,M,A,_,_),_), D=:=D,M=:=M,A=:=A),X),
 			   calculaFaturacao(X,SomaPreco),
 			   Vfaturado is SomaPreco.
 
 calculaFaturacao([],0).
-calculaFaturacao([IdEncomenda],Preco) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco)).
-calculaFaturacao([IdEncomenda|XS],N2) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco)),
+calculaFaturacao([IdEncomenda],Preco) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco,_)).
+calculaFaturacao([IdEncomenda|XS],N2) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco,_)),
 						       calculaFaturacao(XS,N),
 						       N2 is N + Avaliacao.
 
@@ -317,24 +317,27 @@ calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,e
 						       C2 is C+1.
 
 % 7. Número total de entregas pelos diferentes meios de transporte num intervalo de tempo--------------------------------------------------------------
-filtra(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), date_time_stamp(date(Ai,Mi,Di,Hi,MinI,0,0,-,-), Stamp)),Lent).
+
+comp(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),data(D,M,A,H,Min)) :- (date_time_stamp(date(Ai,Mi,Di,Hi,MinI,0,0,-,-), Stamp))=<(date_time_stamp(date(A,M,D,H,Min,0,0,-,-), Stamp)),(date_time_stamp(date(AF,MF,DF,HF,MinF,0,0,-,-), Stamp)) >= (date_time_stamp(date(A,M,D,H,Min,0,0,-,-), Stamp)).
+
+filtra(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),data(D,M,A,H,Min))),Lent).
                                       
 listaEnc([],[]).
-listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre), ID =:= ID),L).
-listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre), ID =:= ID),[S|_]), 
+listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
+listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),[S|_]), 
                                 listaEnc(T,Z), 
                                 L = [S|Z].
 
       
-bic((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 1. 
+bic((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 1. 
             
 listaEB(Le,L) :- include(bic,Le,L).
 
-moto((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 2.   
+moto((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 2.   
           
 listaEM(Le,L) :- include(moto,Le,L).
 
-carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 3.  
+carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 3.  
            
 listaEC(Le,L) :- include(carro,Le,L).
 
