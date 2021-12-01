@@ -76,7 +76,14 @@ executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       write("carro:"),
 		       printList(LC),
 		       write('----------------------------------------------'),nl,!.
-executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
+executa(X) :- X =:= 8, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
+               read(DiaInicial-MesInicial-AnoInicial-HInicial-MInicial),nl,
+               write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
+               read(DiaFinal-MesFinal-AnoFinal-HFinal-MFinal),nl, 
+               getAllEstafetas(Estafetas),
+               numeroEntregasEstafeta(Estafeta, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), N),
+               write(N),
+               write('----------------------------------------------'),nl,!.  
 executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaInicial-MesInicial-AnoInicial-HInicial-MInicial),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
@@ -96,7 +103,8 @@ executa(X) :- X =:= 10, nl,write('Insira ID Estafeta :'),nl,
 						write('Insira dia data(dd,mm,aaaa,hh,mm)  :'),nl,
 						read(Dia),nl,
 						pesoTotalNumDia(IDestafeta,Dia,Resultado),nl,
-						write('Peso total :'),write(Resultado),nl,!.
+						write('Peso total :'),write(Resultado),nl,
+						write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 11, halt.
 
 
@@ -348,6 +356,43 @@ listaEM(Le,L) :- include(moto,Le,L).
 carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 3.  
            
 listaEC(Le,L) :- include(carro,Le,L).
+
+% 8. Identificar  o  número  total  de  entregas  pelos  estafetas,  num  determinado intervalo de tempo
+
+numeroEntregasEstafeta([], DataInicio, DataFim, 0).
+
+numeroEntregasEstafeta([estafeta(_,_,Encomendas)], DataInicio, DataFim, N) :- getAllIdEntregas(LIdentregas),
+                                    verificaEntregas(Encomendas,LIdentregas, [], LEntregues),
+                                    converteListaIdToEntregas(LEntregues,[],LEntregas),
+                                    filtraEntregasData(LEntregas,DataInicio,DataFim,[],ListaEntregas),
+                                    length(ListaEntregas, N).
+
+numeroEntregasEstafeta([estafeta(_,_,Encomendas)|XS], DataInicio, DataFim, N2) :- 
+                                    getAllIdEntregas(LIdentregas),
+                                    verificaEntregas(Encomendas,LIdentregas,[], LEntregues),
+                                    converteListaIdToEntregas(LEntregues,[],LEntregas),
+                                    filtraEntregasData(LEntregas,DataInicio,DataFim,[],ListaEntregas),
+                                    numeroEntregasEstafeta(XS, DataInicio, DataFim, N),
+                                    length(ListaEntregas, X),
+                                    N2 is N + X.
+									
+verificaEntregas([Id],LIdentregas,Lista, LEntregues) :-  member(Id,LIdentregas),
+                            adicionarElemLista(Id,Lista,LEntregues),!.
+verificaEntregas([Id],LIdentregas,Lista, Lista).
+verificaEntregas([Id|LE],LIdentregas,Lista, LEntregues2) :- member(Id,LIdentregas),
+                            adicionarElemLista(Id,Lista,LEntregues),
+                        verificaEntregas(LE,LIdentregas,LEntregues,LEntregues2).
+
+verificaEntregas([Id|LE],LIdentregas,Lista, LEntregues) :- 
+                        verificaEntregas(LE,LIdentregas,Lista,LEntregues).
+
+
+converteListaIdToEntregas([],[],[]).
+converteListaIdToEntregas([Id], LEntregas, LEntregas2) :- getEntregaPorId(Id,[Entrega]),
+                            adicionarElemLista(Entrega,LEntregas,LEntregas2).
+converteListaIdToEntregas([Id|LId], LEntregas, LEntregas2) :- getEntregaPorId(Id,[Entrega]),
+                            adicionarElemLista(Entrega,LEntregas,LEntregas3),
+                            converteListaIdToEntregas(LId,LEntregas3,LEntregas2).
 
 % 9. Calcular o número de encomendas entregues e não entregues([Encomenda] -> [Entregas] -> [] -> [] -> [Encomendas Não Entregues] -> [Encomendas Entregues] ) -
 
