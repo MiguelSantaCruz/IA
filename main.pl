@@ -36,7 +36,9 @@ validaEscolha(X) :- X > 11,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fa
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
-executa(X) :- X =:= 1, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 1, estMaisEco(Max,Nome),
+				print(Max),
+				print(Nome),nl,!.
 executa(X) :- X =:= 2, write('Insira ID Cliente'),nl,
 			   read(Id),
 			   identificaEstafetaByCliente(Id,Estafetas),nl,
@@ -47,13 +49,31 @@ executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       write('\u001b[35m[Lista de Clientes associados]\u001b[0m ------------------'),nl,
 		       write('Identificador - Nome - NIF - Encomenda'),nl,
 		       printList(L),write('--------------------------------------------------'),!.
-executa(X) :- X =:= 4, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 4, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
+		        read(Dia-Mes-Ano-Hora-Min),nl,
+		        calculaF(data(Dia,Mes,Ano,Hora,Min),V),
+		        write(V),nl,!. 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       read(Nome),
 		       calculaRankingEstafetaPorCliente(Nome,Ranking),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
-executa(X) :- X =:= 7, write('\u001b[31mNão implementado!\u001b[0m').  
+executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
+		        read(DiaInicial-MesInicial-AnoInicial-Hi-MinI),nl,
+		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
+		       read(DiaFinal-MesFinal-AnoFinal,Hf,MinF),nl,
+		       filtra(data(DiaInicial,MesInicial,AnoInicial,Hi,MinI), data(DiaFinal,MesFinal,AnoFinal,Hf,MinF),LEnt),
+		       listaEnc(LEnt,LE),
+		       listaEB(LE,Lb),
+		       write("bicicleta:"),
+		       printList(Lb),
+		       listaEM(LE,LM),
+		       write("mota:"),
+		       printList(LM),
+		       listaEC(LE,LC),	      
+		       write("carro:"),
+		       printList(LC),
+		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaInicial-MesInicial-AnoInicial-HoraInicial-MinutoInicial),nl,
@@ -172,6 +192,34 @@ getAllEncomendas(X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Tr
 			   
 getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 
+% 1.Identificar estafeta que utilizou mais vezes um meio de transporte mais ecológico --------------------------------------------------------------------------
+
+nomeESt([],[]).
+nomeESt([H|T],L):-findall((H,Nome),estafeta(H,Nome,_),[S|_]),
+                  nomeES(T,Z),
+               L = [S|Z].
+
+estMaisEco(Max,IdNomes):- findall((IdStaff,Lenc),estafeta(IdStaff,_,Lenc),L),
+                       sort(0,@<,L,Ls),
+                       estAux(Max,Ls,IdMaxL),
+                   nomeESt(IdMaxL,IdNomes).
+
+estAux(0,[],[]).
+estAux(Max,[(IdEst,Lenc)],[IdEst]):- estCount(Lenc,C),
+                              Max = C.
+estAux(Max,[(IdEst,Lenc)|T],L):- estCount(Lenc,Count),
+                       estAux(CountMax,T,Ls),
+                        (Count > CountMax -> Max = Count, L = [IdEst];
+                         Count == CountMax -> Max = CountMax, L = [IdEst|Ls]; Max = CountMax, L = Ls).
+
+estCount([Idenc|T],X):- findall(Trans,encomenda(Idenc,_,_,_,_,_,Trans,_),L),
+                              soma(L,X).
+soma([],0).
+soma([H|T],S):-soma(T,G),S is H+G.
+
+
+
+
 % 2. identificar que estafetas entregaram determinada(s) encomenda(s) a um determinado cliente; (id Cliente-> [Entregas] -> idEstafeta -> NomeEstafeta)--------------------------------------------------------------------------
 
 identificaEstafetaByCliente(IdCliente,ListaEstafetas) :- getAllClientesPorId(IdCliente,ListaClientes),
@@ -230,6 +278,23 @@ constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePo
 							            adicionarElemLista(Cliente,ListaClientes,NListaClientes),
 						    		    constroiListaClienteDadoId(XS,NListaClientes,N2ListaClientes).
 
+
+
+% 4. Calcular o valor faturado pela Green Distribution num determinado dia--------------------------------------------------------------------------
+
+
+calculaF(Dia,Vfaturado):- findall(IdEncomenda,entrega(_,_,IdEncomenda,Dia,_),X),
+			   calculaFaturacao(X,SomaPreco),
+			   Vfaturado is SomaPreco.
+
+calculaFaturacao([],0).
+calculaFaturacao([IdEncomenda],Preco) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco)).
+calculaFaturacao([IdEncomenda|XS],N2) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco)),
+						       calculaFaturacao(XS,N),
+						       N2 is N + Avaliacao.
+
+
+
 % 6.Calcular a classificação média de satisfação dos cliente para um determinado estafeta -----------------------------------------------------------------------
 
 calculaRankingEstafetaPorCliente(NomeEstafeta,Ranking) :- getEstafetaPorNome(NomeEstafeta,estafeta(_,_,ListaEncomendas)),
@@ -237,20 +302,44 @@ calculaRankingEstafetaPorCliente(NomeEstafeta,Ranking) :- getEstafetaPorNome(Nom
 							  Ranking is SomaRanking / NumeroDeAval.
 
 						  
-%Transforma lista de clientes em lista de Id Encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
+% Transforma lista de clientes em lista de Id Encomendas ([Cliente] -> [Lista de Id Encomendas Inicial ([])] -> [IdEncomendas])
 encomendasCliente([],[],[]).
 encomendasCliente([cliente(_,_,_,IdEncomenda)],ListaEncomendas,NListaEncomendas) :- adicionarElemLista(IdEncomenda,ListaEncomendas,NListaEncomendas).
 encomendasCliente([cliente(_,_,_,IdEncomenda)|XS],ListaEncomendas,N2ListaEncomendas) :- adicionarElemLista(IdEncomenda,ListaEncomendas,NListaEncomendas),
 										      encomendasCliente(XS,NListaEncomendas,N2ListaEncomendas).
 
-%Calcular o ranking ([Id Encomenda] -> Soma dos Rankings -> Número de Ranking)
+% Calcular o ranking ([Id Encomenda] -> Soma dos Rankings -> Número de Ranking)
 calculaRanking([],0,0).
 calculaRanking([IdEncomenda],Avaliacao,1) :- getEntregaPorIdEncomenda(IdEncomenda,entrega(_,_,_,_,Avaliacao)).
 calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,entrega(_,_,_,_,Avaliacao)), 
 						       calculaRanking(XS,N,C),
 						       N2 is N + Avaliacao,
 						       C2 is C+1.
-						   
+
+% 7. Número total de entregas pelos diferentes meios de transporte num intervalo de tempo--------------------------------------------------------------
+filtra(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), date_time_stamp(date(Ai,Mi,Di,Hi,MinI,0,0,-,-), Stamp)),Lent).
+                                      
+listaEnc([],[]).
+listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre), ID =:= ID),L).
+listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre), ID =:= ID),[S|_]), 
+                                listaEnc(T,Z), 
+                                L = [S|Z].
+
+      
+bic((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 1. 
+            
+listaEB(Le,L) :- include(bic,Le,L).
+
+moto((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 2.   
+          
+listaEM(Le,L) :- include(moto,Le,L).
+
+carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre)) :- Tran =:= 3.  
+           
+listaEC(Le,L) :- include(carro,Le,L).
+
+
+
 % 9. Calcular o número de encomendas entregues e não entregues([Encomenda] -> [Entregas] -> [] -> [] -> [Encomendas Não Entregues] -> [Encomendas Entregues] ) -
 
 statusEncomendas([],[],[],[],[],[]).
