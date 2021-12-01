@@ -76,17 +76,14 @@ executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 8, write('\u001b[31mNão implementado!\u001b[0m').  
 executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
-		       read(DiaInicial-MesInicial-AnoInicial-HoraInicial-MinutoInicial),nl,
+		       read(DiaInicial-MesInicial-AnoInicial-HInicial-MInicial),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
-		       read(DiaFinal-MesFinal-AnoFinal-HoraFinal-MinutoFinal),nl,
+		       read(DiaFinal-MesFinal-AnoFinal-HFinal-MFinal),nl,
 		       getAllEntregas(LEntregas),	
-		       filtraEntregasData(LEntregas, data(DiaInicial,MesInicial,AnoInicial,HoraInicial,MinutoInicial), 
-		       data(DiaFinal,MesFinal,AnoFinal,HoraFinal,MinutoFinal), [], ListaEntregasData),
-		       converteListaEntregasToListaIdEncomendas(ListaEntregasData,[],ListaIdEntregas),
+		       filtraEntregasData(LEntregas, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), [], ListaEntregasData),
+		       converteListaEntregasToListaEncomendas(ListaEntregasData,[],ListaEncomendasEntregues),
 		       getAllEncomendas(LEncomendas),
-		       statusEncomendas(LEncomendas,ListaIdEntregas,[],[],LEncNaoEntregues,LEncEntregues),
-		       listIdToEncomenda(LEncEntregues,[],ListaEncomendasEntregues),
-		       listIdToEncomenda(LEncNaoEntregues,[],ListaEncomendasNaoEntregues),nl,
+		       getEncomendasNaoEntregues(LEncomendas,ListaEncomendasEntregues,[],ListaEncomendasNaoEntregues),nl,	       
 		       write('\u001b[35m[Lista de encomendas entregues]\u001b[0m -----------------'),nl,
 		       printList(ListaEncomendasEntregues),nl,
 		       write('\u001b[35m[Lista de encomendas não entregues]\u001b[0m -------------'),nl,
@@ -124,37 +121,39 @@ listIdToEncomenda([Id|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorI
 
 %Filtra entregas por data ([Entrega] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [Encomendas] -> [Encomedas])
 filtraEntregasData([],_,_,[],[]).
-filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :- comparaData(Data,DataInicial,DataFinal),
-								    adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda),ListEncomendas,NListEncomendas),!.
-filtraEntregasData([entrega(_,_,_,_,_)],_,_,ListEncomendas,NListEncomendas) :- NListEncomendas = ListEncomendas,!.
-filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)|XS],DataInicial,DataFinal,ListEncomendas,N2ListEncomendas) :- comparaData(Data,DataInicial,DataFinal),
-								    adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda),ListEncomendas,NListEncomendas),
-								    filtraEntregasData(XS,DataInicial,DataFinal,NListEncomendas,N2ListEncomendas).
+filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :- 
+						comparaData(Data,DataInicial,DataFinal),
+					        adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda),ListEncomendas,NListEncomendas),!.
+filtraEntregasData([entrega(_,_,_,_,_)],_,_,ListEncomendas,ListEncomendas).	
+filtraEntregasData([entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda)|XS],DataInicial,DataFinal,ListEncomendas,N2ListEncomendas) :- 
+						comparaData(Data,DataInicial,DataFinal),
+						adicionarElemLista(entrega(Id,IdEstafeta,IdEncomenda,Data,Encomenda),ListEncomendas,NListEncomendas),
+					        filtraEntregasData(XS,DataInicial,DataFinal,NListEncomendas,N2ListEncomendas).
 filtraEntregasData([entrega(_,_,_,_,_)|XS],DataInicial,DataFinal,ListEncomendas,NListEncomendas) :-
-								    filtraEntregasData(XS,DataInicial,DataFinal,ListEncomendas,NListEncomendas). 								    
+					       filtraEntregasData(XS,DataInicial,DataFinal,ListEncomendas,NListEncomendas).  								    
 %Verifica se uma dada data está entre outras duas (data(Dia,Mes,Ano,Hora,Minuto) -> data(Dia,Mes,Ano,Hora,Minuto) -> data(Dia,Mes,Ano,Hora,Minuto) -> {V,F})
-comparaData(data(Dia,_,_,_,_),_,_) :- Dia =< 0, !,fail.
-comparaData(data(Dia,_,__,_),_,_) :- Dia > 31, !,fail.
-comparaData(_,data(DiaInicial,_,_,_,_),_) :- DiaInicial =< 0, !,fail.
-comparaData(_,data(DiaInicial,_,_,_,_),_) :- DiaInicial > 31, !,fail.
-comparaData(_,_,data(DiaFinal,_,_,_,_)) :- DiaFinal =< 0, !,fail.
-comparaData(_,_,data(DiaFinal,_,_,_,_)) :- DiaFinal > 31, !,fail.
-comparaData(data(_,Mes,_,_,_),_,_) :- Mes =< 0, !,fail.
-comparaData(data(_,Mes,_,_,_),_,_) :- Mes > 12, !,fail.
-comparaData(_,data(_,MesInicial,_,_,_),_) :- MesInicial =< 0, !,fail.
-comparaData(_,data(_,MesInicial,_,_,_),_) :- MesInicial > 12, !,fail.
-comparaData(_,_,data(_,MesFinal,_,_,_)) :- MesFinal =< 0, !,fail.
-comparaData(_,_,data(_,MesFinal,_,_,_)) :- MesFinal > 12, !,fail. 
+%comparaData(data(Dia,_,_,_,_),_,_) :- Dia =< 0, !,fail.
+%comparaData(data(Dia,_,__,_),_,_) :- Dia > 31, !,fail.
+%comparaData(_,data(DiaInicial,_,_,_,_),_) :- DiaInicial =< 0, !,fail.
+%comparaData(_,data(DiaInicial,_,_,_,_),_) :- DiaInicial > 31, !,fail.
+%comparaData(_,_,data(DiaFinal,_,_,_,_)) :- DiaFinal =< 0, !,fail.
+%comparaData(_,_,data(DiaFinal,_,_,_,_)) :- DiaFinal > 31, !,fail.
+%comparaData(data(_,Mes,_,_,_),_,_) :- Mes =< 0, !,fail.
+%comparaData(data(_,Mes,_,_,_),_,_) :- Mes > 12, !,fail.
+%comparaData(_,data(_,MesInicial,_,_,_),_) :- MesInicial =< 0, !,fail.
+%comparaData(_,data(_,MesInicial,_,_,_),_) :- MesInicial > 12, !,fail.
+%comparaData(_,_,data(_,MesFinal,_,_,_)) :- MesFinal =< 0, !,fail.
+%comparaData(_,_,data(_,MesFinal,_,_,_)) :- MesFinal > 12, !,fail. 
 comparaData(data(_,_,Ano,_,_),data(_,_,AnoInicial,_,_),data(_,_,_,_,_)) :- Ano < AnoInicial,!,fail.
 comparaData(data(_,_,Ano,_,_),data(_,_,_,_,_),data(_,_,AnoFinal,_,_)) :- Ano > AnoFinal,!,fail.
 comparaData(data(_,Mes,_,_,_),data(_,MesInicial,_,_,_),data(_,_,_,_,_)) :- Mes < MesInicial,!,fail.
 comparaData(data(_,Mes,_,_,_),data(_,_,_,_,_),data(_,MesFinal,_,_,_)) :- Mes > MesFinal,!,fail.
 comparaData(data(Dia,_,_,_,_),data(DiaInicial,_,_,_,_),data(_,_,_,_,_)) :- Dia < DiaInicial,!,fail.
 comparaData(data(Dia,_,_,_,_),data(_,_,_,_,_),data(DiaFinal,_,_,_,_)) :- Dia > DiaFinal,!,fail.
-comparaData(data(_,_,_,Hora,_),data(_,_,_,HoraInicial,_),data(_,_,_,_,_)) :- Hora < HoraInicial,!,fail.
-comparaData(data(_,_,_,Hora,_),data(_,_,_,_,_),data(_,_,_,HoraFinal,_)) :- Hora > HoraFinal,!,fail.
-comparaData(data(_,_,_,_,Minuto),data(_,_,_,_,MinutoInicial),data(_,_,_,_,_)) :- Minuto < MinutoInicial,!,fail.
-comparaData(data(_,_,_,_,Minuto),data(_,_,_,_,_	),data(_,_,_,_,MinutoFinal)) :- Minuto > MinutoFinal,!,fail.
+comparaData(data(Dia,_,_,Hora,_),data(_,_,_,HoraInicial,_),data(DiaFinal,_,_,_,_)) :- Dia =:= DiaFinal, Hora < HoraInicial,!,fail.
+comparaData(data(Dia,_,_,Hora,_),data(_,_,_,_,_),data(DiaFinal,_,_,HoraFinal,_)) :- Dia =:= DiaFinal, Hora > HoraFinal,!,fail.
+comparaData(data(_,_,_,Hora,Minuto),data(_,_,_,_,MinutoInicial),data(_,_,_,HoraFinal,_)) :- Hora =:= HoraFinal, Minuto < MinutoInicial,!,fail.
+comparaData(data(_,_,_,Hora,Minuto),data(_,_,_,_,_),data(_,_,_,HoraFinal,MinutoFinal)) :-  Hora =:= HoraFinal, Minuto > MinutoFinal,!,fail.
 comparaData(_,_,_).
 
 converteListaEntregasToListaIdEncomendas([],[],[]).
@@ -345,16 +344,25 @@ listaEC(Le,L) :- include(carro,Le,L).
 
 % 9. Calcular o número de encomendas entregues e não entregues([Encomenda] -> [Entregas] -> [] -> [] -> [Encomendas Não Entregues] -> [Encomendas Entregues] ) -
 
-statusEncomendas([],[],[],[],[],[]).
-statusEncomendas([encomenda(Id,_,_,_,_,_,_,_,_)],LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues) :-
-					verificaEncomenda(Id,LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues).
-statusEncomendas([encomenda(Id,_,_,_,_,_,_,_,_)|XS],LIdEntregas,LEncEntregues,LEncNaoEntregues,N2LEncEntregues,N2LEncNaoEntregues) :- 
-					verificaEncomenda(Id,LIdEntregas,LEncEntregues,LEncNaoEntregues,NLEncEntregues,NLEncNaoEntregues),
-					statusEncomendas(XS,LIdEntregas,NLEncEntregues,NLEncNaoEntregues,N2LEncEntregues,N2LEncNaoEntregues).	
-														   
-verificaEncomenda(Id,ListaIdEntregas,LEncEntregues,_LEncNaoEntregues,NLEncEntregues,_NLEncNaoEntregues) :- member(Id,ListaIdEntregas),
-					 					adicionarElemLista(Id,LEncEntregues,NLEncEntregues),!.
-verificaEncomenda(Id,_,_LEncEntregues,LEncNaoEntregues,_NLEncEntregues,NLEncNaoEntregues) :- adicionarElemLista(Id,LEncNaoEntregues,NLEncNaoEntregues),!.
+converteListaEntregasToListaEncomendas([],[],[]).
+converteListaEntregasToListaEncomendas([entrega(_,_,IdEncomenda,_,_)],ListaEncomendas,NListaEncomendas) :- getEncomendaPorId(IdEncomenda,Encomenda),
+										    adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas).
+converteListaEntregasToListaEncomendas([entrega(_,_,IdEncomenda,_,_)|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorId(IdEncomenda,Encomenda),
+								    adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas),
+								    converteListaEntregasToListaEncomendas(XS,NListaEncomendas,N2ListaEncomendas).
+	
+getEncomendasNaoEntregues([],[],[],[]).	
+getEncomendasNaoEntregues([X],ListaEncomendasEntregues,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues) :- 
+						not(member(X,ListaEncomendasEntregues)),
+						adicionarElemLista(X,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues),!.
+getEncomendasNaoEntregues([_],_,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues) :- 
+						NListaEncomendasNaoEntregues is ListaEncomendasNaoEntregues,!.					    
+getEncomendasNaoEntregues([X|XS],ListaEncomendasEntregues,ListaEncomendasNaoEntregues,N2ListaEncomendasNaoEntregues) :- 
+						not(member(X,ListaEncomendasEntregues)),
+		              			adicionarElemLista(X,ListaEncomendasNaoEntregues,NListaEncomendasNaoEntregues),
+		              			getEncomendasNaoEntregues(XS,ListaEncomendasEntregues,NListaEncomendasNaoEntregues,N2ListaEncomendasNaoEntregues).
+getEncomendasNaoEntregues([_|XS],ListaEncomendasEntregues,ListaEncomendasNaoEntregues,N2ListaEncomendasNaoEntregues) :- 
+		              			getEncomendasNaoEntregues(XS,ListaEncomendasEntregues,ListaEncomendasNaoEntregues,N2ListaEncomendasNaoEntregues). 
 					 					
 %---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
