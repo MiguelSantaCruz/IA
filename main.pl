@@ -240,7 +240,7 @@ nomeESt([H|T],L):-findall((H,Nome),estafeta(H,Nome,_),[S|_]),
                   nomeESt(T,Z),
                L = [S|Z].
 
-estMaisEco(Max,IdNomes):- findall((IdStaff,Lenc),estafeta(IdStaff,_,Lenc),L),
+estMaisEco(Max,IdNomes):- findall((IdEst,Lenc),estafeta(IdEst,_,Lenc),L),
                        sort(0,@<,L,Ls),
                        estAux(Max,Ls,IdMaxL),
                    nomeESt(IdMaxL,IdNomes).
@@ -250,14 +250,18 @@ estAux(Max,[(IdEst,Lenc)],[IdEst]):- estCount(Lenc,C),
                               Max = C.
 estAux(Max,[(IdEst,Lenc)|T],L):- estCount(Lenc,Count),
                        estAux(CountMax,T,Ls),
-                        (Count > CountMax -> Max = Count, L = [IdEst];
+                        (Count < CountMax -> Max = Count, L = [IdEst];
                          Count == CountMax -> Max = CountMax, L = [IdEst|Ls]; Max = CountMax, L = Ls).
 
-estCount([Idenc|T],X):- findall(Trans,encomenda(Idenc,_,_,_,_,_,Trans,_,_),L),
-                              soma(L,X).
+estCount([Idenc|T],X):- findall(Trans,(encomenda(Idenc,_,_,_,_,_,Trans,_,_), Idenc=:=Idenc),L),
+                              media(L,X).
 soma([],0).
 soma([H|T],S):-soma(T,G),S is H+G.
 
+tamL([_], 1):- !.
+tamL([_|L], T):- tamL(L, X), T is X + 1.
+
+media(L,M):- soma(L, S), tamL(L,T), M is S / T.
 
 
 
@@ -358,10 +362,12 @@ calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,e
 						       C2 is C+1.
 
 % 7. Número total de entregas pelos diferentes meios de transporte num intervalo de tempo--------------------------------------------------------------
-comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S),
-                          (S >= Si -> true; false).
-comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S),
-                          (S =< Sf -> true; false).
+
+comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S), S >= Si, S =< Sf .
+
+
+
+
 
 filtra(Si,Sf,Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
                                       
