@@ -49,7 +49,7 @@ executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       write('\u001b[35m[Lista de Clientes associados]\u001b[0m ------------------'),nl,
 		       write('Identificador - Nome - NIF - Encomenda'),nl,
 		       printList(L),write('--------------------------------------------------'),!.
-executa(X) :- X =:= 4, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
+executa(X) :- X =:= 4, write('Insira data (dd-mm-aaaa-hh-mm) :'),nl,
 		        read(Dia-Mes-Ano-Hora-Min),nl,
 		        calculaF(data(Dia,Mes,Ano,Hora,Min),V),
 		        write(V),nl,!. 
@@ -59,10 +59,12 @@ executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       calculaRankingEstafetaPorCliente(Nome,Ranking),nl,
 		       write('Ranking: '),write(Ranking),write(' ⭐'),nl,!. 
 executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
-		       read(DiaInicial-MesInicial-AnoInicial-Hi-MinI),nl,
+		       read(DI-MI-AI-HI-MinI),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
-		       read(DiaFinal-MesFinal-AnoFinal,Hf,MinF),nl,
-		       filtra(data(DiaInicial,MesInicial,AnoInicial,Hi,MinI), data(DiaFinal,MesFinal,AnoFinal,Hf,MinF),LEnt),
+		       read(DF-MF-AF-HF-MinF),nl,
+		       date_time_stamp(date(AI,MI,DI,HI,MinI,0,0,-,-), Si),
+		       date_time_stamp(date(AF,MF,DF,HF,MinF,0,0,-,-), Sf),
+		       filtra(Si,Sf,LEnt),
 		       listaEnc(LEnt,LE),
 		       listaEB(LE,Lb),
 		       write("bicicleta:"),
@@ -316,14 +318,16 @@ calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,e
 						       C2 is C+1.
 
 % 7. Número total de entregas pelos diferentes meios de transporte num intervalo de tempo--------------------------------------------------------------
+comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S),
+                          (S >= Si -> true; false).
+comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S),
+                          (S =< Sf -> true; false).
 
-comp(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),data(D,M,A,H,Min)) :- (date_time_stamp(date(Ai,Mi,Di,Hi,MinI,0,0,-,-), Stamp))=<(date_time_stamp(date(A,M,D,H,Min,0,0,-,-), Stamp)),(date_time_stamp(date(AF,MF,DF,HF,MinF,0,0,-,-), Stamp)) >= (date_time_stamp(date(A,M,D,H,Min,0,0,-,-), Stamp)).
-
-filtra(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(data(Di,Mi,Ai,Hi,MinI),data(Df,Mf,Af,Hf,MinF),data(D,M,A,H,Min))),Lent).
+filtra(Si,Sf,Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
                                       
 listaEnc([],[]).
-listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
-listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),[S|_]), 
+listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
+listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),[S|_]), 
                                 listaEnc(T,Z), 
                                 L = [S|Z].
 
@@ -339,8 +343,6 @@ listaEM(Le,L) :- include(moto,Le,L).
 carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 3.  
            
 listaEC(Le,L) :- include(carro,Le,L).
-
-
 
 % 9. Calcular o número de encomendas entregues e não entregues([Encomenda] -> [Entregas] -> [] -> [] -> [Encomendas Não Entregues] -> [Encomendas Entregues] ) -
 
