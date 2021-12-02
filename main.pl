@@ -247,7 +247,7 @@ getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 
 getAllRuas(X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X).
 
-getAllIdRuas(X) :- findall(Id,rua(Id,Nome,Freguesia,Distancia),X).
+getAllIdRuas(X) :- findall(Id,rua(Id,_Nome,_Freguesia,_Distancia),X).
 
 getRuaPorId(Id,X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X). 
 
@@ -271,7 +271,7 @@ estAux(Max,[(IdEst,Lenc)|T],L):- estCount(Lenc,Count),
                         (Count < CountMax -> Max = Count, L = [IdEst];
                          Count == CountMax -> Max = CountMax, L = [IdEst|Ls]; Max = CountMax, L = Ls).
 
-estCount([Idenc|T],X):- findall(Trans,(encomenda(Idenc,_,_,_,_,_,Trans,_,_), Idenc=:=Idenc),L),
+estCount([Idenc|_],X):- findall(Trans,(encomenda(Idenc,_,_,_,_,_,Trans,_,_), Idenc=:=Idenc),L),
                               media(L,X).
 soma([],0).
 soma([H|T],S):-soma(T,G),S is H+G.
@@ -337,7 +337,7 @@ calculaFaturacao([],0).
 calculaFaturacao([IdEncomenda],Preco) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco,_)).
 calculaFaturacao([IdEncomenda|XS],N2) :- getEncomendaPorId(IdEncomenda,encomenda(_,_,_,_,_,_,_,Preco,_)),
 						       calculaFaturacao(XS,N),
-						       N2 is N + Avaliacao.
+						       N2 is N + Preco.
 
 
 % 5. Identificar  quais  as  zonas  (e.g.,  rua  ou  freguesia)  com  maior  volume  de entregas por parte da Green Distribution 
@@ -413,7 +413,7 @@ comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S), S =< 
 
 
 
-filtra(Si,Sf,Lent) :- findall(IdEnc,(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
+filtra(Si,Sf,Lent) :- findall(IdEnc,(entrega(_,_,IdEnc,data(D,M,A,H,Min),_), comp(Si,(D,M,A,H,Min),Sf)),Lent).
                                       
 listaEnc([],[]).
 listaEnc([ID],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
@@ -422,21 +422,21 @@ listaEnc([ID|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(I
                                 L = [S|Z].
 
       
-bic((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 1. 
+bic((_,_,_,_,_,_,Tran,_,_)) :- Tran =:= 1. 
             
 listaEB(Le,L,Tam) :- include(bic,Le,L), length(L,Tam).
 
-moto((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 2.   
+moto((_,_,_,_,_,_,Tran,_,_)) :- Tran =:= 2.   
           
 listaEM(Le,L,Tam) :- include(moto,Le,L), length(L,Tam).
 
-carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 3.  
+carro((_,_,_,_,_,_,Tran,_,_)) :- Tran =:= 3.  
            
 listaEC(Le,L,Tam) :- include(carro,Le,L), length(L,Tam).
 
 % 8. Identificar  o  número  total  de  entregas  pelos  estafetas,  num  determinado intervalo de tempo
 
-numeroEntregasEstafeta([], DataInicio, DataFim, 0).
+numeroEntregasEstafeta([],_,_, 0).
 
 numeroEntregasEstafeta([estafeta(_,_,Encomendas)], DataInicio, DataFim, N) :- getAllIdEntregas(LIdentregas),
                                     verificaEntregas(Encomendas,LIdentregas, [], LEntregues),
