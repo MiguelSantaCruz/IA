@@ -267,33 +267,18 @@ media(L,M):- soma(L, S), tamL(L,T), M is S / T.
 
 % 2. identificar que estafetas entregaram determinada(s) encomenda(s) a um determinado cliente; (id Cliente-> [Entregas] -> idEstafeta -> NomeEstafeta)--------------------------------------------------------------------------
 
-identificaEstafetaByCliente(IdCliente,ListaEstafetas) :- getAllClientesPorId(IdCliente,ListaClientes),
-									listaIdEncomendasbyListaClientes(ListaClientes,[],ListaIdEncomendas),
-									listaIdEncomendasToListEncomendas(ListaIdEncomendas,[],ListaEncomendas),
-									listaIdEstafetasbyListaEncomendas(ListaEncomendas,[],ListaIdEstafeta),
-									listaEstafetasbyListaIdEstafetas(ListaIdEstafeta,[],ListaEstafetas).
+identificaEstafetaByCliente(IdCliente,ListaEstafetas) :- listaIdEncomendasPorCliente(IdCliente,X),
+							listaIdsEncomendasParaListaIdEstafetas(X,[],Y),
+							listaEstafetasbyListaIdEstafetas(Y,[],ListaEstafetas).
 
-listaIdEncomendasbyListaClientes([],[],[]).
-listaIdEncomendasbyListaClientes([cliente(Id,_Nome,_Nif,_IdEncomenda)],ListaEncomendas,NListaEncomendas):- getListIDEncomendaPorIdCliente(Id,Encomendas),
-											append(ListaEncomendas,Encomendas,NListaEncomendas).
-listaIdEncomendasbyListaClientes([cliente(Id,_Nome,_Nif,_IdEncomenda)|T],ListaEncomendas,N2ListaEncomendas):- getListIDEncomendaPorIdCliente(Id,Encomendas),
-											append(ListaEncomendas,Encomendas,NListaEncomendas),
-											listaIdEncomendasbyListaClientes(T,NListaEncomendas,N2ListaEncomendas).
+listaIdEncomendasPorCliente(IdCliente,ListaIdsEncomendas) :- findall(Id, encomenda(Id,_,_,IdCliente,_,_,_,_,_),ListaIdsEncomendas).
 
-listaIdEncomendasToListEncomendas([],[],[]).
-listaIdEncomendasToListEncomendas([IdEncomenda],ListaEncomendas,NListaEncomendas):- getEncomendaPorId(IdEncomenda,Encomenda),
-											adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas).
-listaIdEncomendasToListEncomendas([IdEncomenda|T],ListaEncomendas,N2ListaEncomendas):- getEncomendaPorId(IdEncomenda,Encomenda),
-											adicionarElemLista(Encomenda,ListaEncomendas,NListaEncomendas),
-											listaIdEncomendasToListEncomendas(T,NListaEncomendas,N2ListaEncomendas).
-
-
-listaIdEstafetasbyListaEncomendas([],[],[]).
-listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _,_)],ListaEstafetas,NListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
-											adicionarElemLista(IdEstafeta,ListaEstafetas,NListaEstafetas).
-listaIdEstafetasbyListaEncomendas([encomenda(Identificador, _, _, _, _, _,_, _,_)| T ],ListaEstafetas,N2ListaEstafetas):- getIdEstafetaPorIdEncomenda(Identificador,IdEstafeta),
-											adicionarElemLista(IdEstafeta,ListaEstafetas,NListaEstafetas),
-											listaIdEstafetasbyListaEncomendas(T,NListaEstafetas,N2ListaEstafetas).
+listaIdsEncomendasParaListaIdEstafetas([],[],[]).
+listaIdsEncomendasParaListaIdEstafetas([IdEncomenda],ListaIdEstafetas,NListaIdEstafetas):- findall(IdEstafeta,entrega(_,IdEstafeta,IdEncomenda,_,_),ListaRIdEstafetas),
+											append(ListaRIdEstafetas,ListaIdEstafetas,NListaIdEstafetas).
+listaIdsEncomendasParaListaIdEstafetas([IdEncomenda|T],ListaIdEstafetas,NListaIdEstafetas):- listaIdsEncomendasParaListaIdEstafetas([IdEncomenda],ListaIdEstafetas,N2ListaIdEstafetas),
+											listaIdsEncomendasParaListaIdEstafetas(T,ListaIdEstafetas,N3ListaIdEstafetas),
+											append(N2ListaIdEstafetas,N3ListaIdEstafetas,NListaIdEstafetas).
 
 listaEstafetasbyListaIdEstafetas([],[],[]).
 listaEstafetasbyListaIdEstafetas([IdEstafeta],ListaEstafetas,NListaEstafetas):- getEstafetaPorID(IdEstafeta,Estafeta),
