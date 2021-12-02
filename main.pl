@@ -54,7 +54,16 @@ executa(X) :- X =:= 4, write('Insira data (dd-mm-aaaa) :'),nl,
 		        read(Dia-Mes-Ano),nl,
 		        calculaF(data(Dia,Mes,Ano,0,0),V),
 		        write(V),nl,!. 
-executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
+executa(X) :- X =:= 5, getAllEntregas(LEntregas),
+            converteEntregasToEncomendas(LEntregas, [], LEncomendas),
+            convertEncomendasToRuas(LEncomendas, [], LRuas),
+            getAllIdRuas(LIdRuas),
+            contarRuas(LIdRuas, LRuas, [], Lista),
+            ordenarLista(Lista, LOrd),
+            zonasMaximo(LOrd, 0, [], Zonas),
+            converteIdToRuas(Zonas, [], ListaFinal),
+            printList(ListaFinal),
+            write('----------------------------------------------'),nl,!. 
 executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
 		       read(Nome),
 		       calculaRankingEstafetaPorCliente(Nome,Ranking),nl,
@@ -236,6 +245,12 @@ getAllEncomendas(X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Tr
 			   
 getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 
+getAllRuas(X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X).
+
+getAllIdRuas(X) :- findall(Id,rua(Id,Nome,Freguesia,Distancia),X).
+
+getRuaPorId(Id,X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X). 
+
 % 1.Identificar estafeta que utilizou mais vezes um meio de transporte mais ecológico --------------------------------------------------------------------------
 
 nomeESt([],[]).
@@ -324,6 +339,51 @@ calculaFaturacao([IdEncomenda|XS],N2) :- getEncomendaPorId(IdEncomenda,encomenda
 						       calculaFaturacao(XS,N),
 						       N2 is N + Avaliacao.
 
+
+% 5. Identificar  quais  as  zonas  (e.g.,  rua  ou  freguesia)  com  maior  volume  de entregas por parte da Green Distribution 
+
+converteEntregasToEncomendas([entrega(_,_,Enc,_,_)], LEncomenda, LEncomenda2) :- getEncomendaPorId(Enc,Encomenda),
+                                              adicionarElemLista(Encomenda,LEncomenda, LEncomenda2).
+converteEntregasToEncomendas([entrega(_,_,Enc,_,_)|LE], LEncomenda, LEncomenda2) :- getEncomendaPorId(Enc,Encomenda),
+                                              adicionarElemLista(Encomenda,LEncomenda, LEncomenda3),
+                                            converteEntregasToEncomendas(LE,LEncomenda3,LEncomenda2).
+
+
+convertEncomendasToRuas([encomenda(_,_,_,_,_,Rua,_,_,_)], LRuas, LRuas2) :- adicionarElemLista(Rua,LRuas, LRuas2).
+convertEncomendasToRuas([encomenda(_,_,_,_,_,Rua,_,_,_)|LE], LRuas, LRuas2) :- adicionarElemLista(Rua,LRuas, LRuas3),
+                                            convertEncomendasToRuas(LE, LRuas3, LRuas2).
+
+contarRuas([Rua], LIdRuas, L, Lista) :- count(Rua, LIdRuas, N),
+                        adicionarElemLista((N, Rua), L, Lista).
+
+contarRuas([Rua|LRuas], LIdRuas, L, Lista) :- count(Rua, LIdRuas, N),
+                        adicionarElemLista((N, Rua), L, L2),
+                        contarRuas(LRuas, LIdRuas, L2, Lista).
+
+
+ordenarLista(L, Lord) :- sort(1,@>,L,Lord).
+
+zonasMaximo([], 0, [],[]).
+
+zonasMaximo([(N, Rua)], Max, ListaAux,Lista2) :- N>=Max -> adicionarElemLista(Rua,ListaAux,Lista2).
+zonasMaximo([(N, Rua)], Max, ListaAux,Lista2).
+zonasMaximo([(N, Rua)|LR], Max, ListaAux,Lista2) :- zonasMaximo(LR, N, ListaAux, Lista1),
+                               N>=Max -> adicionarElemLista(Rua,Lista1,Lista2).
+zonasMaximo([(N, Rua)|LR], Max, ListaAux,Lista2). 
+
+count(_, [], 0).
+count(X, [X | T], N) :-
+  !, count(X, T, N1),
+  N is N1 + 1.
+count(X, [_ | T], N) :-
+  count(X, T, N).
+
+converteIdToRuas([Id], LAux, LRuas) :- getRuaPorId(Id, Rua),
+                       adicionarElemLista(Rua, LAux, LRuas).
+
+converteIdToRuas([Id|LId], LAux, LRuas) :- getRuaPorId(Id, Rua),
+                       adicionarElemLista(Rua, LAux, L2),
+                        converteIdToRuas(LId, L2, LRuas). 
 
 
 % 6.Calcular a classificação média de satisfação dos cliente para um determinado estafeta -----------------------------------------------------------------------
