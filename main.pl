@@ -36,9 +36,8 @@ validaEscolha(X) :- X > 11,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fa
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
-executa(X) :- X =:= 1, estMaisEco(Max,Nome),
-				print(Max),
-				print(Nome),nl,!.
+executa(X) :- X =:= 1, estMaisEco(_,Nome),
+			printList(Nome),nl,!.
 executa(X) :- X =:= 2, write('Insira ID Cliente'),nl,
 			   read(Id),
 			   identificaEstafetaByCliente(Id,Estafetas),nl,
@@ -49,9 +48,9 @@ executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       write('\u001b[35m[Lista de Clientes associados]\u001b[0m ------------------'),nl,
 		       write('Identificador - Nome - NIF - Encomenda'),nl,
 		       printList(L),write('--------------------------------------------------'),!.
-executa(X) :- X =:= 4, write('Insira data (dd-mm-aaaa-hh-mm) :'),nl,
-		        read(Dia-Mes-Ano-Hora-Min),nl,
-		        calculaF(data(Dia,Mes,Ano,Hora,Min),V),
+executa(X) :- X =:= 4, write('Insira data (dd-mm-aaaa) :'),nl,
+		        read(Dia-Mes-Ano),nl,
+		        calculaF(data(Dia,Mes,Ano,0,0),V),
 		        write(V),nl,!. 
 executa(X) :- X =:= 5, write('\u001b[31mNão implementado!\u001b[0m'). 
 executa(X) :- X =:= 6, write('Insira Nome Estafeta: '),nl,
@@ -66,15 +65,15 @@ executa(X) :- X =:= 7, write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       date_time_stamp(date(AF,MF,DF,HF,MinF,0,0,-,-), Sf),
 		       filtra(Si,Sf,LEnt),
 		       listaEnc(LEnt,LE),
-		       listaEB(LE,Lb),
-		       write("bicicleta:"),
-		       printList(Lb),
-		       listaEM(LE,LM),
-		       write("mota:"),
-		       printList(LM),
-		       listaEC(LE,LC),	      
-		       write("carro:"),
-		       printList(LC),
+		       listaEB(LE,Lb,Tam),
+		       write("Número de entregas realizadas de bicicleta:"),write(Tam),nl,
+		       printList(Lb),nl,
+		       listaEM(LE,LM,TamM),
+		       write("Número de entregas realizadas de moto:"),write(TamM),nl,
+		       printList(LM),nl,
+		       listaEC(LE,LC,TamC),
+		       write("Número de entregas realizadas de carro:"),write(TamC),nl,	      
+		       printList(LC),nl,
 		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 8, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
                read(DiaInicial-MesInicial-AnoInicial-HInicial-MInicial),nl,
@@ -236,7 +235,7 @@ getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 % 1.Identificar estafeta que utilizou mais vezes um meio de transporte mais ecológico --------------------------------------------------------------------------
 
 nomeESt([],[]).
-nomeESt([H|T],L):-findall((H,Nome),estafeta(H,Nome,_),[S|_]),
+nomeESt([H|T],L):-findall(Nome,estafeta(H,Nome,_),[S|_]),
                   nomeESt(T,Z),
                L = [S|Z].
 
@@ -258,10 +257,8 @@ estCount([Idenc|T],X):- findall(Trans,(encomenda(Idenc,_,_,_,_,_,Trans,_,_), Ide
 soma([],0).
 soma([H|T],S):-soma(T,G),S is H+G.
 
-tamL([_], 1):- !.
-tamL([_|L], T):- tamL(L, X), T is X + 1.
 
-media(L,M):- soma(L, S), tamL(L,T), M is S / T.
+media(L,M):- soma(L, S), length(L,T), M is S / T.
 
 
 
@@ -313,7 +310,7 @@ constroiListaClienteDadoId([X|XS],ListaClientes,N2ListaClientes) :- getClientePo
 % 4. Calcular o valor faturado pela Green Distribution num determinado dia--------------------------------------------------------------------------
 
 
-calculaF(data(D,M,A,Ho,Min),Vfaturado):- findall(IdEncomenda,(entrega(_,_,IdEncomenda,data(D,M,A,_,_),_), D=:=D,M=:=M,A=:=A),X),
+calculaF(data(D,M,A,_,_),Vfaturado):- findall(IdEncomenda,(entrega(_,_,IdEncomenda,data(D,M,A,_,_),_), D=:=D,M=:=M,A=:=A),X),
 			   calculaFaturacao(X,SomaPreco),
 			   Vfaturado is SomaPreco.
 
@@ -348,32 +345,30 @@ calculaRanking([IdEncomenda|XS],N2,C2) :- getEntregaPorIdEncomenda(IdEncomenda,e
 
 % 7. Número total de entregas pelos diferentes meios de transporte num intervalo de tempo--------------------------------------------------------------
 
-comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S), S >= Si, S =< Sf .
+comp(Si,(D,M,A,H,Min),Sf) :- date_time_stamp(date(A,M,D,H,Min,0,0,-,-),S), S =< Sf, S >= Si.
 
 
 
-
-
-filtra(Si,Sf,Lent) :- findall((Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
+filtra(Si,Sf,Lent) :- findall(IdEnc,(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
                                       
 listaEnc([],[]).
-listaEnc([(_,_,ID,_,_)],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
-listaEnc([(_,_,ID,_,_)|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),[S|_]), 
+listaEnc([ID],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),L).
+listaEnc([ID|T],L) :- findall((ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D),(encomenda(ID,Peso,Vol,Cli,Prazo,Rua,Tra,Pre,D), ID =:= ID),[S|_]), 
                                 listaEnc(T,Z), 
                                 L = [S|Z].
 
       
 bic((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 1. 
             
-listaEB(Le,L) :- include(bic,Le,L).
+listaEB(Le,L,Tam) :- include(bic,Le,L), length(L,Tam).
 
 moto((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 2.   
           
-listaEM(Le,L) :- include(moto,Le,L).
+listaEM(Le,L,Tam) :- include(moto,Le,L), length(L,Tam).
 
 carro((ID,Peso,Vol,Cli,Prazo,Rua,Tran,Pre,D)) :- Tran =:= 3.  
            
-listaEC(Le,L) :- include(carro,Le,L).
+listaEC(Le,L,Tam) :- include(carro,Le,L), length(L,Tam).
 
 % 8. Identificar  o  número  total  de  entregas  pelos  estafetas,  num  determinado intervalo de tempo
 

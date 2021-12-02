@@ -31,7 +31,7 @@ rua(3,'Açúcar','Oleiros',2).
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço,data de encomenda)
 encomenda(1,5,53,1,6,1,1,20,data(5,12,2021,07,00)).
 encomenda(2,13,20,2,12,3,2,30,data(1,12,2021,01,00)).
-encomenda(3,2,3,3,24,6,1,2022,data(2,12,2021,19,00)).
+encomenda(3,2,3,3,24,6,3,2022,data(2,12,2021,19,00)).
 encomenda(4,7,43,4,16,8,1,203,data(3,12,2021,08,00)).
 encomenda(5,7,43,4,16,8,1,203,data(3,12,2021,08,00)).
 %-----------------Clientes------------------
