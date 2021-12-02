@@ -41,7 +41,9 @@ executa(X) :- X =:= 1, estMaisEco(_,Nome),
 executa(X) :- X =:= 2, write('Insira ID Cliente'),nl,
 			   read(Id),
 			   identificaEstafetaByCliente(Id,Estafetas),nl,
-			   printList(Estafetas),nl,!.
+			   write('Estafetas : '),nl,
+			   printList(Estafetas),nl,
+			   write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 3, write('Insira Nome Estafeta: '),nl,
 		       read(Nome),
 		       identificaClientesByEstafeta(Nome,L),nl,
@@ -100,7 +102,7 @@ executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       write('----------------------------------------------'),nl,!.
 executa(X) :- X =:= 10, nl,write('Insira ID Estafeta :'),nl,
 						read(IDestafeta),nl,
-						write('Insira dia-mes-ano)  :'),nl,
+						write('Insira dia-mes-ano  :'),nl,
 						read(Dia-Mes-Ano),nl,
 						pesoTotalNumDia(IDestafeta,data(Dia,Mes,Ano,0,0),Resultado),nl,
 						write('Peso total: '),write(Resultado),nl,
@@ -219,7 +221,7 @@ getAllEstafetas(X) :- findall(estafeta(ID,Nome,Encomendas),estafeta(ID,Nome,Enco
 
 getEntregaPorId(Id,X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),X).
 
-getEstafetaPorID(ID,X) :-  findall(estafeta(ID,Nome,Encomendas),estafeta(ID,Nome,Encomendas),[X|_]).
+getEstafetaPorID(ID,X) :-  findall(Nome,estafeta(ID,Nome,_),[X|_]).
 
 getAllEntregas(X) :- findall(entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),entrega(Id,IdEstafeta,IdEncomenda,Data,Avaliacao),X).
 
@@ -264,9 +266,9 @@ media(L,M):- soma(L, S), length(L,T), M is S / T.
 
 % 2. identificar que estafetas entregaram determinada(s) encomenda(s) a um determinado cliente; (id Cliente-> [Entregas] -> idEstafeta -> NomeEstafeta)--------------------------------------------------------------------------
 
-identificaEstafetaByCliente(IdCliente,ListaEstafetas) :- listaIdEncomendasPorCliente(IdCliente,X),
-							listaIdsEncomendasParaListaIdEstafetas(X,[],Y),
-							listaEstafetasbyListaIdEstafetas(Y,[],ListaEstafetas).
+identificaEstafetaByCliente(IdCliente,ListaEstafetas) :- listaIdEncomendasPorCliente(IdCliente,ListaIdEncomendas),
+							listaIdsEncomendasParaListaIdEstafetas(ListaIdEncomendas,[],ListaIdEstafetas),
+							listaEstafetasbyListaIdEstafetas(ListaIdEstafetas,[],ListaEstafetas).
 
 listaIdEncomendasPorCliente(IdCliente,ListaIdsEncomendas) :- findall(Id, encomenda(Id,_,_,IdCliente,_,_,_,_,_),ListaIdsEncomendas).
 
@@ -432,19 +434,19 @@ getEncomendasNaoEntregues([_|XS],ListaEncomendasEntregues,ListaEncomendasNaoEntr
 
 %10 calcular o peso total transportado por estafeta num determinado dia
 
-pesoTotalNumDia(IdEstafeta,Dia,Res):- listaEntregasNumDia(IdEstafeta,Dia,ListaIdEncomendas),
-									listaEntregasParaPeso(ListaIdEncomendas,Res).
+pesoTotalNumDia(IdEstafeta,Dia,Res):- listaIdsEncomendasNumDia(IdEstafeta,Dia,ListaIdEncomendas),
+									  listaEncomendasParaPeso(ListaIdEncomendas,Res).
 
 
-listaEntregasNumDia(Id,Data,Res) :- findall(Encomenda, (entrega(_,Id,Encomenda,D,_),dataSimples(D,Data)),Res).
+listaIdsEncomendasNumDia(Id,Data,Res) :- findall(Encomenda, (entrega(_,Id,Encomenda,D,_),dataSimples(D,Data)),Res).
 
 
-listaEntregasParaPeso([],0).
-listaEntregasParaPeso([H],PesoTotal):- encomenda(H,Peso,_,_,_,_,_,_,_),
+listaEncomendasParaPeso([],0).
+listaEncomendasParaPeso([H],PesoTotal):- encomenda(H,Peso,_,_,_,_,_,_,_),
 									PesoTotal is Peso.
-listaEntregasParaPeso([H|T],PesoTotal):- listaEntregasParaPeso([H],Peso1),
-										listaEntregasParaPeso(T,Peso2),
-										PesoTotal is Peso1 + Peso2.
+listaEncomendasParaPeso([H|T],PesoTotal):- listaEncomendasParaPeso([H],Peso1),
+										   listaEncomendasParaPeso(T,Peso2),
+										   PesoTotal is Peso1 + Peso2.
 										
 dataSimples(data(Dia,Mes,Ano,_,_),data(Dia2,Mes2,Ano2,_,_)) :- Dia == Dia2, Mes == Mes2 , Ano == Ano2.
 
