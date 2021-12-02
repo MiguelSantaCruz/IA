@@ -89,11 +89,11 @@ executa(X) :- X =:= 9, nl,write('Insira data inicial (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaInicial-MesInicial-AnoInicial-HInicial-MInicial),nl,
 		       write('Insira data final (dd-mm-aaaa-hh-mm) :'),nl,
 		       read(DiaFinal-MesFinal-AnoFinal-HFinal-MFinal),nl,
-		       getAllEntregas(LEntregas),	
-		       filtraEntregasData(LEntregas, data(DiaInicial,MesInicial,AnoInicial,HInicial,MInicial), data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal), [], ListaEntregasData),
+		       date_time_stamp(date(AnoInicial,MesInicial,DiaInicial,HInicial,MInicial,0,0,-,-), Si),
+		       date_time_stamp(date(AnoFinal,MesFinal,DiaFinal,HFinal,MFinal,0,0,-,-), Sf),
+		       filtraEntregas(Si,Sf,ListaEntregasData),
 		       converteListaEntregasToListaEncomendas(ListaEntregasData,[],ListaEncomendasEntregues),
-		       getAllEncomendas(LEncomendas),
-		       filtraEncomendasData(LEncomendas,data(DiaFinal,MesFinal,AnoFinal,HFinal,MFinal),[],LEncomendasData),
+		       filtraEncomendas(Si,Sf,LEncomendasData),
 		       getEncomendasNaoEntregues(LEncomendasData,ListaEncomendasEntregues,[],ListaEncomendasNaoEntregues),nl,	       
 		       write('\u001b[35m[Lista de encomendas entregues]\u001b[0m -----------------'),nl,
 		       printList(ListaEncomendasEntregues),nl,
@@ -135,6 +135,8 @@ listIdToEncomenda([Id|XS],ListaEncomendas,N2ListaEncomendas) :- getEncomendaPorI
 							        listIdToEncomenda(XS,NListaEncomendas,N2ListaEncomendas).
 
 
+filtraEntregas(Si,Sf,Lent) :- findall(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av),(entrega(Id,IdEs,IdEnc,data(D,M,A,H,Min),Av), comp(Si,(D,M,A,H,Min),Sf)),Lent).
+filtraEncomendas(Si,Sf,Lent) :- findall(encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Trans,Preco,data(D,M,A,H,Min)),(encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Trans,Preco,data(D,M,A,H,Min)), comp(Si,(D,M,A,H,Min),Sf)),Lent).
 
 %Filtra entregas por data ([Entrega] -> data(Dia,Mes,Ano) -> data(Dia,Mes,Ano) -> [] -> [Entregas])
 filtraEntregasData([],_,_,[],[]).
