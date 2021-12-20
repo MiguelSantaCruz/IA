@@ -27,11 +27,15 @@ rua(1,'Paraíso',3).
 rua(2,'Sete Céus',5).
 rua(3,'Açúcar',2).
 
-%-----------------Aresta------------------
+%-----------------Estrada------------------
 %aresta(identificador, id_rua, id_rua_2, custo)
-aresta(1,1,2,12).
-aresta(2,2,3,32).
+estrada(1,1,2,12).
+estrada(2,2,3,32).
 
+%-----------------Andar------------------
+%andar(identificador, id_estrada)
+andar(1,1).
+andar(2,2).
 %-----------------Encomendas------------------
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço,data de encomenda)
 encomenda(1,5,53,1,6,1,1,20,data(5,12,2021,07,00)).
