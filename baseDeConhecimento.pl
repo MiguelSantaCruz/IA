@@ -22,10 +22,15 @@ transporte(2,'moto',20,35,2).
 transporte(3,'carro',100,25,1).
 
 %-----------------Ruas------------------
-%rua(identificador, nome da rua, nome da freguesia, distancia ao centro de logistica)
-rua(1,'Paraíso','Nogueira',3).
-rua(2,'Sete Céus','Lindoso',5).
-rua(3,'Açúcar','Oleiros',2).
+%rua(identificador, nome da rua, distancia ao centro de logistica)
+rua(1,'Paraíso',3).
+rua(2,'Sete Céus',5).
+rua(3,'Açúcar',2).
+
+%-----------------Aresta------------------
+%aresta(identificador, id_rua, id_rua_2, custo)
+aresta(1,1,2,12).
+aresta(2,2,3,32).
 
 %-----------------Encomendas------------------
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço,data de encomenda)
