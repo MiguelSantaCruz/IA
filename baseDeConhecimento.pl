@@ -5,15 +5,35 @@
 
 
 
-%:- dynamic (transporte/3).
-%:- dynamic (rua/3).
-%:- dynamic (encomenda/2).
-%:- dynamic (cliente/2).
-%:- dynamic (estafeta/2).
-%:- dynamic (entrega/2).
+:- dynamic (transporte/3).
+:- dynamic (rua/3).
+:- dynamic (encomenda/2).
+:- dynamic (cliente/2).
+:- dynamic (estafeta/2).
+:- dynamic (entrega/2).
+:- dynamic (estrada/2).
 
 
 %BASE DO CONHECIMENTO
+
+%-------------------Grafo----------------------
+%estrada(idEstrada,idRua1,idRua2,distancia)
+estrada(1,1,2,1).
+estrada(2,1,5,3).
+estrada(3,1,6,3).
+estrada(4,1,11,5).
+estrada(5,2,3,4).
+estrada(6,3,5,3).
+estrada(7,4,5,4).
+estrada(8,4,6,4).
+estrada(9,6,11,9).
+estrada(10,6,10,13).
+estrada(11,7,8,3).
+estrada(12,7,10,11).
+estrada(13,7,11,8).
+estrada(14,8,9,8).
+estrada(15,9,12,7).
+estrada(16,10,12,8).
 
 %------------------MeiosTransporte-------------
 %transporte(identificador,nome, peso máximo, velocidade média, indice ecologico 1-3)
@@ -22,20 +42,26 @@ transporte(2,'moto',20,35,2).
 transporte(3,'carro',100,25,1).
 
 %-----------------Ruas------------------
-%rua(identificador, nome da rua, distancia ao centro de logistica)
-rua(1,'Paraíso',3).
-rua(2,'Sete Céus',5).
-rua(3,'Açúcar',2).
-
-%-----------------Estrada------------------
-%aresta(identificador, id_rua, id_rua_2, custo)
-estrada(1,1,2,12).
-estrada(2,2,3,32).
+%rua(identificador, nome da rua,distancia ao centro de logistica em linha reta em quilómetros)
+rua(1,'Avenida Desembargador Moreira',0).
+rua(2,'Rua Sete Céus',3).
+rua(3,'Rua do Açúcar',4.75).
+rua(4,'Rua Arlindo Nogueira',5.5).
+rua(5,'Rua Carlos Augusto',1).
+rua(6,'Rua Pereira Estéfano',3).
+rua(7,'Avenida Tocantins',15).
+rua(8,'Avenida Afonso Pena',16).
+rua(9,'Rua Domingos Olímpio',23).
+rua(10,'Avenida São João',16).
+rua(11,'Rodovia Raposo Tavares',5).
+rua(12,'Rua Tenente Cardoso',13.75).
 
 %-----------------Andar------------------
 %andar(identificador, id_estrada)
 andar(1,1).
 andar(2,2).
+
+
 %-----------------Encomendas------------------
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua,transporte, preço,data de encomenda)
 encomenda(1,5,53,1,6,1,1,20,data(5,12,2021,07,00)).

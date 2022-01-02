@@ -1,16 +1,16 @@
-%Retirar de comentário estas linhas para correr como um programa nativo no linux ./main.pl
-
 %#!/usr/bin/env swipl
 %:- initialization(main, main).
 
 
 %carregar a base de conhecimento atual
 :- consult('baseDeConhecimento.pl').
+:- consult('invariantes.pl').
 
 %Loop principal que implementa o menu de interação com a aplicação
 %Nota:\u001b[32m é o código de cor para verde, \u001b[34m é o código de cor para vermelho e \u001b[0m é o código de reset de cor
 %As cores só funcionam em terminais unix
-main :- repeat,
+main :- write('\033[H\033[2J'),
+	repeat,
 	write('\u001b[32mGreen distribution\u001b[0m 🌲 --------------------------------------------------------------------------'),nl,
 	write('\u001b[34m[1]\u001b[0m Identificar estafeta que utilizou mais vezes um meio de transporte mais ecológico'),nl,
 	write('\u001b[34m[2]\u001b[0m Identificar que estafetas entregaram determinada(s) encomenda(s) a um determinado cliente'),nl,
@@ -22,7 +22,8 @@ main :- repeat,
 	write('\u001b[34m[8]\u001b[0m Número total de entregas por estafetas, num intervalo de tempo'),nl,
 	write('\u001b[34m[9]\u001b[0m Calcular o número de encomendas entregues e não entregues'),nl,
 	write('\u001b[34m[10]\u001b[0m Calcular o peso total transportado por estafeta num determinado dia'),nl,
-	write('\u001b[34m[11]\u001b[0m Sair'),nl,
+	write('\u001b[34m[11]\u001b[0m Adicionar termo à base de conhecimento'),nl,
+	write('\u001b[34m[12]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
 	read(Escolha),
@@ -30,9 +31,9 @@ main :- repeat,
 	executa(Escolha),
   	nl,nl,fail.
  
-%Função que valida as escolhas feitas( se estão entre 1 e 10)  
+%Função que valida as escolhas feitas( se estão entre 1 e 12)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
-validaEscolha(X) :- X > 11,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
+validaEscolha(X) :- X > 12,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
@@ -116,7 +117,16 @@ executa(X) :- X =:= 10, nl,write('Insira ID Estafeta :'),nl,
 						pesoTotalNumDia(IDestafeta,data(Dia,Mes,Ano,0,0),Resultado),nl,
 						write('Peso total: '),write(Resultado),nl,
 						write('----------------------------------------------'),nl,!.
-executa(X) :- X =:= 11, halt.
+executa(X) :- X =:= 11, nl,write('Termos disponíveis para adicionar:'),nl,
+			   write('• estafeta(ID, Nome, Lista de Encomendas)'),nl,
+			   write('• entrega(ID, ID do Estafeta,ID da Encomenda, Data, Encomenda)'),nl,
+			   write('• encomenda(ID, Peso, Volume, ID do Cliente, Prazo em horas, ID da Rua, ID do Transporte, Preço, data(dd,mm,aaaa,hh,mm))'),nl,
+			   write('• rua(ID, Nome, Distância ao centro em Kms)'),nl,
+			   write('• estrada(ID, ID da rua 1, ID da rua 2, Comprimento)'),nl,nl,
+			   write('Insira Termo a adicionar :'),nl,
+			   read(Termo),nl,
+			   evolucao(Termo),nl,!.
+executa(X) :- X =:= 12, halt.
 
 
 %Funções auxiliares gerais ------------------------------------------
@@ -366,10 +376,10 @@ ordenarLista(L, Lord) :- sort(1,@>,L,Lord).
 zonasMaximo([], 0, [],[]).
 
 zonasMaximo([(N, Rua)], Max, ListaAux,Lista2) :- N>=Max -> adicionarElemLista(Rua,ListaAux,Lista2).
-zonasMaximo([(N, Rua)], Max, ListaAux,Lista2).
+zonasMaximo([(_,_)], _, _,_).
 zonasMaximo([(N, Rua)|LR], Max, ListaAux,Lista2) :- zonasMaximo(LR, N, ListaAux, Lista1),
                                N>=Max -> adicionarElemLista(Rua,Lista1,Lista2).
-zonasMaximo([(N, Rua)|LR], Max, ListaAux,Lista2). 
+zonasMaximo([(_, _)|_], _, _,_). 
 
 count(_, [], 0).
 count(X, [X | T], N) :-
@@ -455,12 +465,12 @@ numeroEntregasEstafeta([estafeta(_,_,Encomendas)|XS], DataInicio, DataFim, N2) :
 
 verificaEntregas([Id],LIdentregas,Lista, LEntregues) :-  member(Id,LIdentregas),
                             adicionarElemLista(Id,Lista,LEntregues),!.
-verificaEntregas([Id],LIdentregas,Lista, Lista).
+verificaEntregas([_],_,_, _).
 verificaEntregas([Id|LE],LIdentregas,Lista, LEntregues2) :- member(Id,LIdentregas),
                             adicionarElemLista(Id,Lista,LEntregues),
                         verificaEntregas(LE,LIdentregas,LEntregues,LEntregues2).
 
-verificaEntregas([Id|LE],LIdentregas,Lista, LEntregues) :- 
+verificaEntregas([_|LE],LIdentregas,Lista, LEntregues) :- 
                         verificaEntregas(LE,LIdentregas,Lista,LEntregues).
 
 
