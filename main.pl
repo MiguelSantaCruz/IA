@@ -522,3 +522,21 @@ listaEncomendasParaPeso([H|T],PesoTotal):- listaEncomendasParaPeso([H],Peso1),
 										
 dataSimples(data(Dia,Mes,Ano,_,_),data(Dia2,Mes2,Ano2,_,_)) :- Dia == Dia2, Mes == Mes2 , Ano == Ano2.
 
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+% profundidade DFS
+
+
+dfs(Nodo,[Nodo|Caminho],C) :- profundidade(Nodo,[Nodo],Caminho,C).
+
+
+profundidade(T,_,[],0) :- goal(T).
+
+profundidade(Nodo,Historico,[ProxNodo|Caminho],Distancia) :- 
+    adjacente(Nodo,ProxNodo,Distancia1),
+    not(member(ProxNodo,Historico)),
+    profundidade(ProxNodo,[ProxNodo|Historico],Caminho,Distancia2), Distancia is Distancia1+Distancia2.
+
+adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,Nodo,ProxNodo,Distancia).
+adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,ProxNodo,Nodo,Distancia).
+

@@ -19,7 +19,7 @@
 %-------------------Grafo----------------------
 %estrada(idEstrada,idRua1,idRua2,distancia)
 estrada(1,1,2,1).
-estrada(2,1,5,3).
+estrada(2,1,5,1).
 estrada(3,1,6,3).
 estrada(4,1,11,5).
 estrada(5,2,3,4).
@@ -35,6 +35,8 @@ estrada(14,8,9,8).
 estrada(15,9,12,7).
 estrada(16,10,12,8).
 
+goal(1).
+
 %------------------MeiosTransporte-------------
 %transporte(identificador,nome, peso máximo, velocidade média, indice ecologico 1-3)
 transporte(1,'bicicleta',5,10,3).
@@ -43,7 +45,7 @@ transporte(3,'carro',100,25,1).
 
 %-----------------Ruas------------------
 %rua(identificador, nome da rua,distancia ao centro de logistica em linha reta em quilómetros)
-rua(1,'Avenida Desembargador Moreira',0).
+rua(1,'Centro de Logistica',0).
 rua(2,'Rua Sete Céus',3).
 rua(3,'Rua do Açúcar',4.75).
 rua(4,'Rua Arlindo Nogueira',5.5).
