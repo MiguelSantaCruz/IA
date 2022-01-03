@@ -22,19 +22,27 @@ estrada(1,1,2,1).
 estrada(2,1,5,1).
 estrada(3,1,6,3).
 estrada(4,1,11,5).
-estrada(5,2,3,4).
-estrada(6,3,5,3).
-estrada(7,4,5,4).
-estrada(8,4,6,4).
-estrada(9,6,11,9).
-estrada(10,6,10,13).
-estrada(11,7,8,3).
-estrada(12,7,10,11).
-estrada(13,7,11,8).
-estrada(14,8,9,8).
-estrada(15,9,12,7).
-estrada(16,10,12,8).
+estrada(5,1,10,16).
 
+estrada(6,2,3,4).
+
+estrada(7,3,5,3).
+
+estrada(8,4,5,4).
+estrada(9,4,6,4).
+
+estrada(10,6,11,9).
+estrada(11,6,10,13).
+
+estrada(12,7,8,3).
+estrada(13,7,10,11).
+estrada(14,7,11,8).
+
+estrada(15,8,9,8).
+estrada(16,8,11,11).
+
+estrada(17,9,12,7).
+estrada(18,10,12,8).
 goal(1).
 
 %------------------MeiosTransporte-------------
@@ -45,18 +53,33 @@ transporte(3,'carro',100,25,1).
 
 %-----------------Ruas------------------
 %rua(identificador, nome da rua,distancia ao centro de logistica em linha reta em quilómetros)
-rua(1,'Centro de Logistica',0).
-rua(2,'Rua Sete Céus',3).
-rua(3,'Rua do Açúcar',4.75).
-rua(4,'Rua Arlindo Nogueira',5.5).
-rua(5,'Rua Carlos Augusto',1).
-rua(6,'Rua Pereira Estéfano',3).
-rua(7,'Avenida Tocantins',15).
-rua(8,'Avenida Afonso Pena',16).
-rua(9,'Rua Domingos Olímpio',23).
-rua(10,'Avenida São João',16).
-rua(11,'Rodovia Raposo Tavares',5).
-rua(12,'Rua Tenente Cardoso',13.75).
+rua(1,'Centro de Logistica').
+rua(2,'Rua Sete Céus').
+rua(3,'Rua do Açúcar').
+rua(4,'Rua Arlindo Nogueira').
+rua(5,'Rua Carlos Augusto').
+rua(6,'Rua Pereira Estéfano').
+rua(7,'Avenida Tocantins').
+rua(8,'Avenida Afonso Pena').
+rua(9,'Rua Domingos Olímpio').
+rua(10,'Avenida São João').
+rua(11,'Rodovia Raposo Tavares').
+rua(12,'Rua Tenente Cardoso').
+
+%----------Estima distâncias-----------
+estima(1,0).
+estima(2,3).
+estima(3,5).
+estima(4,6).
+estima(5,1).
+estima(6,3).
+estima(7,15).
+estima(8,16).
+estima(9,29).
+estima(10,16).
+estima(11,5).
+estima(12,14).
+
 
 %-----------------Andar------------------
 %andar(identificador, id_estrada)
