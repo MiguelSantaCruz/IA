@@ -135,7 +135,13 @@ executa(X) :- X =:= 12, nl,write('Insira o ID da rua atual'),nl,
 						read(Nodo),nl,
 						resolve_aestrela(Nodo,Cam/C),
 						printList(Cam),nl,write('Custo: '),write(C),nl,!.
-executa(X) :- X =:= 13, nl,write('Não implementada'),nl,!.
+executa(X) :- X =:= 13, nl, write('Insira ID Estafeta : '),nl,
+                            read(IDestafeta),nl,
+			     getRuaPorEstafeta(IDestafeta,Idrua),
+			     resolve_gulosa(Idrua,Caminho/_),
+			     inverso(Caminho,Cinv),
+			     nomeRua(Cinv,CN),
+			     printList(CN),nl,!.
 executa(X) :- X =:= 14, nl,write('Insira o ID da rua atual'),nl,
 						read(Nodo),nl,
 						dfs(Nodo,L,C),
@@ -585,6 +591,44 @@ obtem_melhor([_|Caminhos], MelhorCaminho) :-
 
 expande_aestrela(Caminho, ExpCaminhos) :-
 	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
+%Gulosa----------------------------------------------------------------------------------
+getRuaPorEstafeta(IdEst,Idrua):- findall(IDenc,estafeta(IdEst,_,[IDenc|_]),[Idenc]),
+					findall(Idenc,encomenda(Idenc, _, _, _, _,Idrua,_, _,_),[Idrua]).
+
+nomeRua([],[]).
+nomeRua([H|T],L):-findall(Nome,rua(H,Nome),[S|_]),
+                  nomeRua(T,Z),
+               L = [S|Z].
+
+
+resolve_gulosa(Nodo,CaminhoDistancia/CustoDist):-
+	estima(Nodo, Estima),
+	agulosa_distancia_g([[Nodo]/0/Estima], InvCaminho/CustoDist/_),
+	inverso(InvCaminho, CaminhoDistancia).
+
+agulosa_distancia_g(Caminhos, Caminho) :-
+	obtem_melhor_distancia_g(Caminhos, Caminho),
+	Caminho = [Nodo|_]/_/_,
+	goal(Nodo).
+
+agulosa_distancia_g(Caminhos, SolucaoCaminho) :-
+	obtem_melhor_distancia_g(Caminhos, MelhorCaminho),
+	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
+	expande_agulosa_distancia_g(MelhorCaminho, ExpCaminhos),
+	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
+        agulosa_distancia_g(NovoCaminhos, SolucaoCaminho).	
+
+obtem_melhor_distancia_g([Caminho], Caminho) :- !.
+obtem_melhor_distancia_g([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
+	Est1 =< Est2, !,
+	obtem_melhor_distancia_g([Caminho1/Custo1/Est1|Caminhos], MelhorCaminho). 
+obtem_melhor_distancia_g([_|Caminhos], MelhorCaminho) :- 
+	obtem_melhor_distancia_g(Caminhos, MelhorCaminho).
+	
+
+expande_agulosa_distancia_g(Caminho, ExpCaminhos) :-
+	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
+
 
 adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
 	estrada(_,Nodo, ProxNodo, PassoCusto),
