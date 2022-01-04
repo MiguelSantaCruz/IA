@@ -53,7 +53,13 @@ executa(X) :- X =:= 3, nl,write('Insira o ID da rua atual'),nl,
 						dfs(Nodo,L,C),
 						nomeRua(L,Ruas),
 						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
-executa(X) :- X =:= 4, nl,write('Não implementada'),nl,!.
+executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
+							read(NodoI),nl,
+							write('Insira o ID da rua que pretende ir'),nl,
+							read(NodoF),nl,
+							breadth_first(NodoI, NodoF, Cam, D),
+							nomeRua(Cam,Ruas),
+							printList(Ruas),nl,write('Distância: '),write(D),nl,!.
 executa(X) :- X =:= 5, nl,write('Não implementada'),nl,!.
 executa(X) :- X =:= 6, halt.
 
@@ -93,6 +99,31 @@ profundidade(Nodo,Historico,[ProxNodo|Caminho],Distancia) :-
 adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,Nodo,ProxNodo,Distancia).
 adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,ProxNodo,Nodo,Distancia).
 
+% BFS
+
+
+breadth_first(Orig, Dest, Cam, D):- bfs(Dest,[[Orig]],Cam),
+									  			bfsDist(Cam, D).
+
+
+bfsDist([X,Y], D) :- adjacente(X,Y,D).
+bfsDist([X,Y|T], D) :- adjacente(X,Y,D1),
+								bfsDist([Y|T], D2),
+								D is D1+D2.		 
+
+
+bfs(EstadoF,[[EstadoF|T]|_],Solucao)  :- reverse([EstadoF|T],Solucao).
+bfs(EstadoF,[EstadoA|Outros],Solucao) :- 
+    EstadoA = [F|_],
+    findall([X|EstadoA],
+            (EstadoF\==F,
+            adjacente(X,F,Distancia),
+            not(member(X,EstadoA))),
+            Novos),
+    append(Outros,Novos,Todos),
+    bfs(EstadoF,Todos,Solucao).
+
+%------
 
 resolve_aestrela(Nodo, Caminho/Custo) :-
 	estima(Nodo, Estima),
