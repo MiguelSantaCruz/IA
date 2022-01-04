@@ -134,7 +134,8 @@ executa(X) :- X =:= 11, nl,write('Termos disponíveis para adicionar:'),nl,
 executa(X) :- X =:= 12, nl,write('Insira o ID da rua atual'),nl,
 						read(Nodo),nl,
 						resolve_aestrela(Nodo,Cam/C),
-						printList(Cam),nl,write('Custo: '),write(C),nl,!.
+						nomeRua(Cam,Ruas),
+						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
 executa(X) :- X =:= 13, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
 			     getRuaPorEstafeta(IDestafeta,Idrua),
@@ -145,7 +146,8 @@ executa(X) :- X =:= 13, nl, write('Insira ID Estafeta : '),nl,
 executa(X) :- X =:= 14, nl,write('Insira o ID da rua atual'),nl,
 						read(Nodo),nl,
 						dfs(Nodo,L,C),
-						printList(L),nl,write('Custo: '),write(C),nl,!.
+						nomeRua(L,Ruas),
+						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
 executa(X) :- X =:= 15, nl,write('Não implementada'),nl,!.
 executa(X) :- X =:= 16, nl,write('Não implementada'),nl,!.
 executa(X) :- X =:= 17, halt.
