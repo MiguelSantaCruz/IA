@@ -40,20 +40,95 @@ estrada(18,10,12,8).
 goal(1).
 
 %----------Estima distâncias-----------
-estima(1,0).
-estima(2,3).
-estima(3,5).
-estima(4,6).
-estima(5,1).
-estima(6,3).
-estima(7,15).
-estima(8,16).
-estima(9,29).
-estima(10,16).
-estima(11,5).
-estima(12,14).
+estima(1,1,0).
+estima(1,2,3).
+estima(1,3,5).
+estima(1,4,6).
+estima(1,5,1).
+estima(1,6,3).
+estima(1,7,15).
+estima(1,8,16).
+estima(1,9,29).
+estima(1,10,16).
+estima(1,11,5).
+estima(1,12,14).
 
+estima(2,2,0).
+estima(2,3,5).
+estima(2,4,6).
+estima(2,5,2).
+estima(2,6,3).
+estima(2,7,25).
+estima(2,8,26).
+estima(2,9,29).
+estima(2,10,26).
+estima(2,11,5).
+estima(2,12,24).
 
+estima(3,3,0).
+estima(3,4,6).
+estima(3,5,3).
+estima(3,6,3).
+estima(3,7,35).
+estima(3,8,36).
+estima(3,9,39).
+estima(3,10,36).
+estima(3,11,5).
+estima(3,12,34).
+
+estima(4,4,0).
+estima(4,5,4).
+estima(4,6,4).
+estima(4,7,45).
+estima(4,8,46).
+estima(4,9,49).
+estima(4,10,46).
+estima(4,11,5).
+estima(4,12,44).
+
+estima(5,5,0).
+estima(5,6,5).
+estima(5,7,55).
+estima(5,8,56).
+estima(5,9,59).
+estima(5,10,56).
+estima(5,11,5).
+estima(5,12,55).
+
+estima(6,6,0).
+estima(6,7,55).
+estima(6,8,56).
+estima(6,9,59).
+estima(6,10,56).
+estima(6,11,5).
+estima(6,12,55).
+
+estima(7,7,0).
+estima(7,8,56).
+estima(7,9,59).
+estima(7,10,56).
+estima(7,11,5).
+estima(7,12,55).
+
+estima(8,8,0).
+estima(8,9,59).
+estima(8,10,56).
+estima(8,11,5).
+estima(8,12,55).
+
+estima(9,9,0).
+estima(9,10,56).
+estima(9,11,5).
+estima(9,12,55).
+
+estima(10,10,0).
+estima(10,11,5).
+estima(10,12,55).
+
+estima(11,11,0).
+estima(11,12,55).
+
+estima(12,12,0).
 %-----------------Encomendas------------------
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua, preço, Estado,data de encomenda)
 
@@ -64,12 +139,12 @@ encomenda(4,7,43,4,16,8,203,efetuada,data(3,12,2021,08,00)).
 encomenda(5,7,43,4,16,8,203,efetuada,data(3,12,2021,08,00)).
 
 encomenda(6,7,43,4,16,8,203,emDistribuicao,data(3,12,2021,08,00)).
-
+encomenda(7,8,43,4,10,4,203,emDistribuicao,data(3,12,2021,08,00)).
 %-----------------Estafetas------------------
 %O ranking é calculado na função 6. com base na lista de encomendas
 %estafeta(identificador, nome, lista de encomendas)
 estafeta(1,'João',[1,3,4]).
-estafeta(2,'Pedro',[2,6]).
+estafeta(2,'Pedro',[2,6,7]).
 
 %-----------------Entregas------------------
 %entrega(identificador, IdEstafeta, IDencomenda, data da entrega,avaliação média 0-5,transporte)
@@ -80,7 +155,7 @@ entrega(4,1,4,data(4,12,2021,17,50),5,1).
 entrega(5,2,5,data(4,12,2021,10,00),5,1).
 
 entrega(6,2,6,data(3,12,2021,12,00),5,porDefinir).
-
+entrega(7,2,6,data(3,12,2021,12,00),5,porDefinir).
 %------------------MeiosTransporte-------------
 %transporte(identificador,nome, peso máximo, velocidade média, indice ecologico 1-3)
 transporte(1,'bicicleta',5,10,3).
