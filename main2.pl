@@ -166,7 +166,7 @@ resolveAestrelaLista([IdRua],FULL/Custo) :-
         resolve_aestrela(1,IdRua,FULL/Custo).
         
 resolveAestrelaLista([IdRua,IdRua2|T1],FULL/Custo) :-
-           resolve_aestrela(IdRua, IdRua2, Caminho/CustoTmp),
+           resolve_aestrela(IdRua2, IdRua, Caminho/CustoTmp),
            resolveAestrelaLista([IdRua2|T1],F1/C1),
            tail(F1,FTemp),
            append(Caminho, FTemp, FULL),

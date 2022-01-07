@@ -157,8 +157,13 @@ executa(X) :- X =:= 15, nl,write('Insira o ID da rua atual:'),nl,
 						nomeRua(Cam,Ruas),
 						printList(Ruas),nl,write('Distância: '),write(D),nl,!.
 executa(X) :- X =:= 16, nl,write('Não implementada'),nl,!.
-executa(X) :- X =:= 17, nl,write('Insira o ID da encomenda: '),nl,
-						read(IdEncomenda),nl.
+executa(X) :- X =:= 17, nl,write('Insira o ID da encomenda:'),nl,
+						  read(IdEncomenda),nl,
+						  write('Insira a distancia: '),nl,
+						  read(Distancia),nl,
+						  escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico),
+						  getTransporteByID(IdTransporteEcologico,transporte(_,Nome,_,_,_)),
+						  write('Meio de transporte a utilizar: '),write(Nome),nl,!.
 executa(X) :- X =:= 18, halt.
 
 
@@ -686,3 +691,29 @@ inverso([X|Xs],Ys, Zs):-
 
 seleciona(E, [E|Xs], Xs).
 seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).									 
+
+%Determina o tempo de entrega num dado transporte
+tempoEntrega(ID,Distancia,Peso,Tempo) :- getTransporteByID(ID,X),
+										 tempoEntregaAux(X,Distancia,Peso,Tempo).
+
+tempoEntregaAux(transporte(ID,_,PesoMax,Velocidade,_),Distancia,Peso,Tempo) :-
+										Peso =< PesoMax,
+										descrescimoVelocidadePorKg(ID,DescrescimoVelocidade),
+										Tempo is (Distancia/(Velocidade - DescrescimoVelocidade*Peso)),!.
+descrescimoVelocidadePorKg(1,0.7).
+descrescimoVelocidadePorKg(2,0.5).
+descrescimoVelocidadePorKg(3,0.1).
+
+getTransporteByID(ID,X) :- findall(transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),[X|_]).
+getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),
+			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),[X|_]).
+%Determina o transporte mais ecológico que consiga entregar determinada entrega a tempo
+escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico) :- findall(ID,transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),L),
+														sort(0,@>,L,SortedList),
+														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Preco,Estado,data(D,M,A,H,Min))),
+														escolheTranspMaisEcologicoAux(L,Prazo,Distancia,Peso,IdTransporteEcologico).
+
+escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologico) :- tempoEntrega(X,Distancia,Peso,Tempo),
+																					   Tempo =< Prazo,
+																					   IdTransporteEcologico is X,!.
+escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
