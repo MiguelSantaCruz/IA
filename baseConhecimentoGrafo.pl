@@ -85,7 +85,7 @@ entrega(6,2,6,data(3,12,2021,12,00),5,porDefinir).
 %transporte(identificador,nome, peso máximo, velocidade média, indice ecologico 1-3)
 transporte(1,'bicicleta',5,10,3).
 transporte(2,'moto',20,35,2).
-transporte(3,'carro',100,25,1).
+transporte(3,'carro',100,50,1).
 
 %-----------------Ruas------------------
 %rua(identificador, nome da rua)

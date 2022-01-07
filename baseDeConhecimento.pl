@@ -42,10 +42,10 @@ goal(1).
 %transporte(identificador,nome, peso máximo, velocidade média, indice ecologico 1-3)
 transporte(1,'bicicleta',5,10,3).
 transporte(2,'moto',20,35,2).
-transporte(3,'carro',100,25,1).
+transporte(3,'carro',100,45,1).
 
 %-----------------Ruas------------------
-%rua(identificador, nome da rua,distancia ao centro de logistica em linha reta em quilómetros)
+%rua(identificador, nome da rua)
 rua(1,'Centro de Logistica').
 rua(2,'Rua Sete Céus').
 rua(3,'Rua do Açúcar').

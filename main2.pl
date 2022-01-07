@@ -16,7 +16,8 @@ main :- write('\033[H\033[2J'),
 	write('\u001b[34m[3]\u001b[0m Encontrar caminho até ao nodo (DFS)'),nl,
 	write('\u001b[34m[4]\u001b[0m Encontrar caminho até ao nodo (BFS)'),nl,
 	write('\u001b[34m[5]\u001b[0m Encontrar caminho até ao nodo (DFS com profundidade limitada)'),nl,
-	write('\u001b[34m[6]\u001b[0m Sair'),nl,
+	write('\u001b[34m[6]\u001b[0m Escolher o meio de transporte mais ecológico'),nl,
+	write('\u001b[34m[7]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
 	read(Escolha),
@@ -61,7 +62,14 @@ executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
 							nomeRua(Cam,Ruas),
 							printList(Ruas),nl,write('Distância: '),write(D),nl,!.
 executa(X) :- X =:= 5, nl,write('Não implementada'),nl,!.
-executa(X) :- X =:= 6, halt.
+executa(X) :- X =:= 6, nl,write('Insira o ID da encomenda:'),nl,
+						  read(IdEncomenda),nl,
+						  write('Insira a distancia: '),nl,
+						  read(Distancia),nl,
+						  escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico),
+						  getTransporteByID(IdTransporteEcologico,transporte(_,Nome,_,_,_)),
+						  write('Meio de transporte a utilizar: '),write(Nome),nl,!.
+executa(X) :- X =:= 7, halt.		
 
 
 %Funções auxiliares gerais ------------------------------------------
@@ -251,3 +259,31 @@ replace(OldFact, NewFact) :-
 
 entregaRealizada(IdEstafeta, IdEnc, Trans):- replace(entrega(I,IdEstafeta,IdEnc,D,A,porDefinir),entrega(I,IdEstafeta,IdEnc,D, A,Trans)),
                                                replace(encomenda(IdEnc,P, V, C,Pz,R,Pc,emDistribuicao), encomenda(IdEnc,P, V, C,Pz,R,Pc,efetuada)).
+
+%Determina o tempo de entrega num dado transporte
+tempoEntrega(ID,Distancia,Peso,Tempo) :- getTransporteByID(ID,X),
+										 tempoEntregaAux(X,Distancia,Peso,Tempo).
+
+tempoEntregaAux(transporte(ID,_,PesoMax,Velocidade,_),Distancia,Peso,Tempo) :-
+										Peso =< PesoMax,
+										descrescimoVelocidadePorKg(ID,DescrescimoVelocidade),
+										Tempo is (Distancia/(Velocidade - DescrescimoVelocidade*Peso)),!.
+descrescimoVelocidadePorKg(1,0.7).
+descrescimoVelocidadePorKg(2,0.5).
+descrescimoVelocidadePorKg(3,0.1).
+
+getTransporteByID(ID,X) :- findall(transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),[X|_]).
+getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),
+			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),[X|_]).
+%Determina o transporte mais ecológico que consiga entregar determinada entrega a tempo
+escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico) :- findall(ID,transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),L),
+														sort(0,@>,L,SortedList),
+														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Trans,Preco,data(D,M,A,H,Min))),
+														escolheTranspMaisEcologicoAux(L,Prazo,Distancia,Peso,IdTransporteEcologico).
+
+escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologico) :- tempoEntrega(X,Distancia,Peso,Tempo),
+																					   Tempo =< Prazo,
+																					   IdTransporteEcologico is X,!.
+escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
+																					
+												

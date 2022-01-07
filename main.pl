@@ -37,9 +37,9 @@ main :- write('\033[H\033[2J'),
 	executa(Escolha),
   	nl,nl,fail.
  
-%Função que valida as escolhas feitas( se estão entre 1 e 17)  
+%Função que valida as escolhas feitas( se estão entre 1 e 18)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
-validaEscolha(X) :- X > 17,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
+validaEscolha(X) :- X > 18,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
@@ -139,25 +139,27 @@ executa(X) :- X =:= 12, nl,write('Insira o ID da rua atual'),nl,
 						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
 executa(X) :- X =:= 13, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
-			     getRuaPorEstafeta(IDestafeta,Idrua),
-			     resolve_gulosa(Idrua,Caminho/_),
-			     inverso(Caminho,Cinv),
-			     nomeRua(Cinv,CN),
-			     printList(CN),nl,!.
-executa(X) :- X =:= 14, nl,write('Insira o ID da rua atual'),nl,
+			     		    getRuaPorEstafeta(IDestafeta,Idrua),
+			     			resolve_gulosa(Idrua,Caminho/_),
+			     			inverso(Caminho,Cinv),
+			     			nomeRua(Cinv,CN),
+			     			printList(CN),nl,!.
+executa(X) :- X =:= 14, nl,write('Insira o ID da rua atual:'),nl,
 						read(Nodo),nl,
 						dfs(Nodo,L,C),
 						nomeRua(L,Ruas),
 						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
-executa(X) :- X =:= 15, nl,write('Insira o ID da rua atual'),nl,
+executa(X) :- X =:= 15, nl,write('Insira o ID da rua atual:'),nl,
 						read(NodoI),nl,
-						write('Insira o ID da rua que pretende ir'),nl,
+						write('Insira o ID da rua que pretende ir:'),nl,
 						read(NodoF),nl,
 						breadth_first(NodoI, NodoF, Cam, D),
 						nomeRua(Cam,Ruas),
 						printList(Ruas),nl,write('Distância: '),write(D),nl,!.
 executa(X) :- X =:= 16, nl,write('Não implementada'),nl,!.
-executa(X) :- X =:= 17, halt.
+executa(X) :- X =:= 17, nl,write('Insira o ID da encomenda: '),nl,
+						read(IdEncomenda),nl.
+executa(X) :- X =:= 18, halt.
 
 
 %Funções auxiliares gerais ------------------------------------------
@@ -286,11 +288,11 @@ getAllEncomendas(X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Tr
 			   
 getAllIdEncomendas(X) :- findall(Id,encomenda(Id, _, _, _, _,_,_, _,_),X).
 
-getAllRuas(X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X).
+getAllRuas(X) :- findall(rua(Id,Nome),rua(Id,Nome),X).
 
-getAllIdRuas(X) :- findall(Id,rua(Id,_Nome,_Freguesia,_Distancia),X).
+getAllIdRuas(X) :- findall(Id,rua(Id,_Nome),X).
 
-getRuaPorId(Id,X) :- findall(rua(Id,Nome,Freguesia,Distancia),rua(Id,Nome,Freguesia,Distancia),X). 
+getRuaPorId(Id,X) :- findall(rua(Id,Nome),rua(Id,Nome),X). 
 
 % 1.Identificar estafeta que utilizou mais vezes um meio de transporte mais ecológico --------------------------------------------------------------------------
 
@@ -595,7 +597,7 @@ bfs(EstadoF,[EstadoA|Outros],Solucao) :-
     append(Outros,Novos,Todos),
     bfs(EstadoF,Todos,Solucao).
 
-%------
+% A estrela --------------------------
 
 resolve_aestrela(Nodo, Caminho/Custo) :-
 	estima(Nodo, Estima),
@@ -683,4 +685,4 @@ inverso([X|Xs],Ys, Zs):-
 	inverso(Xs, [X|Ys], Zs).
 
 seleciona(E, [E|Xs], Xs).
-seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).
+seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).									 
