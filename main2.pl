@@ -67,13 +67,18 @@ executa(X) :- X =:= 3, nl,write('Insira o ID do estafeta'),nl,
 				    write('Tempo da entrega:'),write(TempFinal),nl,
 				    write('Percurso: '),nl,
 				    printList(CN),nl,!.
-executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
-							read(NodoI),nl,
-							write('Insira o ID da rua que pretende ir'),nl,
-							read(NodoF),nl,
-							breadth_first(NodoI, NodoF, Cam, D),
-							nomeRua(Cam,Ruas),
-							printList(Ruas),nl,write('Distância: '),write(D),nl,!.
+executa(X) :- X =:= 4, nl,write('Insira o ID do estafeta'),nl,
+					read(IdEstafeta),nl,
+					transPossiveisBFS(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+					inverso(C,Cinv),
+					nomeTr([Trans],T),
+			     	nomeRua(Cinv,CN),
+				    write('Peso da encomenda: '), write(PT),nl,
+				    write('Prazo de entrega(horas): '), write(PZ),nl,
+				    write('Nome do transporte: '), printList(T),
+				    write('Tempo da entrega:'),write(TempFinal),nl,
+				    write('Percurso: '),nl,
+				    printList(CN),nl,!.
 executa(X) :- X =:= 5, nl,write('Insira o ID do estafeta'),nl,
 					read(IdEstafeta),nl,
 					write('Insira a Profundidade'),nl,
@@ -151,9 +156,8 @@ profundidadelim(Nodo,NodoFinal,Historico,[ProxNodo|Caminho],Distancia,Profundida
 
 % BFS
 
-
-breadth_first(Orig, Dest, Cam, D):- bfs(Dest,[[Orig]],Cam),
-									  			bfsDist(Cam, D).
+breadth_first(Orig, Dest, Cam):- bfs(Dest,[[Orig]],Cam).
+									%bfsDist(Cam, D).
 
 
 bfsDist([X,Y], D) :- adjacente(X,Y,D).
@@ -271,7 +275,16 @@ transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas),
                                      ((PesoT=<100,PesoT>20) -> Trans is 3;
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
-	
+
+transPossiveisBFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+                                     getRuasOrdenadas(LRuas,LRuasOrd), 
+                                     resolveBFS(LRuasOrd,C,Dist), 
+                                     getPesoTotal(LRuas,PesoT),
+                                     getPrazo(LRuas,Prazo),
+                                     ((PesoT=<100,PesoT>20) -> Trans is 3;
+                                     (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
+                                     (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
+
 transPossiveisDFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
                                      resolveDFS(LRuasOrd,C,Dist), 
@@ -330,6 +343,17 @@ resolveDFSlim([IdRua,IdRua2|T1],FULL,Custo,Profundidade) :-
            tail(F1,FTemp),
            append(Caminho, FTemp, FULL),
            Custo is C1+CustoTmp.
+
+resolveBFS([IdRua],Caminho,Custo):-
+			breadth_first(IdRua,1,Caminho),
+			bfsDist(Caminho, Custo).
+resolveBFS([IdRua,IdRua2|T1],FULL, Custo) :-
+           breadth_first(IdRua, IdRua2, Caminho),
+           bfsDist(Caminho, Dist),
+           resolveBFS([IdRua2|T1],F1, C1),
+           tail(F1,FTemp),
+           append(Caminho, FTemp, FULL),
+           Custo is C1+Dist.
 
 %Gulosa----------------------------------------------------------------------------------
 resolve_gulosa(Origem, Destino, CaminhoDistancia/CustoDist) :-
