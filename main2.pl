@@ -45,7 +45,7 @@ executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
 			  printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
-			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
+			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ,Dist),
 			     inverso(C,Cinv),
 			     nomeTr([Trans],T),
 			     nomeRua(Cinv,CN),
@@ -54,10 +54,10 @@ executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
 			     write('Nome do transporte: '), printList(T),
 			     write('Tempo da entrega:'),write(TempFinal),nl,
 			     write('Percurso: '),nl,
-			     printList(CN),nl,!.
+			     printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 3, nl,write('Insira o ID do estafeta'),nl,
 					read(IdEstafeta),nl,
-					transPossiveisDFS(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+					transPossiveisDFS(IdEstafeta,Trans,C,TempFinal,PT,PZ,Dist),
 					inverso(C,Cinv),
 					nomeTr([Trans],T),
 			     	nomeRua(Cinv,CN),
@@ -66,10 +66,10 @@ executa(X) :- X =:= 3, nl,write('Insira o ID do estafeta'),nl,
 				    write('Nome do transporte: '), printList(T),
 				    write('Tempo da entrega:'),write(TempFinal),nl,
 				    write('Percurso: '),nl,
-				    printList(CN),nl,!.
+				    printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 4, nl,write('Insira o ID do estafeta'),nl,
 					read(IdEstafeta),nl,
-					transPossiveisBFS(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+					transPossiveisBFS(IdEstafeta,Trans,C,TempFinal,PT,PZ,Dist),
 					inverso(C,Cinv),
 					nomeTr([Trans],T),
 			     	nomeRua(Cinv,CN),
@@ -78,12 +78,12 @@ executa(X) :- X =:= 4, nl,write('Insira o ID do estafeta'),nl,
 				    write('Nome do transporte: '), printList(T),
 				    write('Tempo da entrega:'),write(TempFinal),nl,
 				    write('Percurso: '),nl,
-				    printList(CN),nl,!.
+				    printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 5, nl,write('Insira o ID do estafeta'),nl,
 					read(IdEstafeta),nl,
 					write('Insira a Profundidade'),nl,
 					read(Profundidade),nl,
-					transPossiveisDFSlim(IdEstafeta,Trans,C,TempFinal,PT,PZ,Profundidade),
+					transPossiveisDFSlim(IdEstafeta,Trans,C,TempFinal,PT,PZ,Profundidade,Dist	),
 					inverso(C,Cinv),
 					nomeTr([Trans],T),
 			     	nomeRua(Cinv,CN),
@@ -92,7 +92,7 @@ executa(X) :- X =:= 5, nl,write('Insira o ID do estafeta'),nl,
 				    write('Nome do transporte: '), printList(T),
 				    write('Tempo da entrega:'),write(TempFinal),nl,
 				    write('Percurso: '),nl,
-				    printList(CN),nl,!.
+				    printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 6, halt.	
 
 
@@ -164,7 +164,7 @@ bfs(EstadoF,[EstadoA|Outros],Solucao) :-
     EstadoA = [F|_],
     findall([X|EstadoA],
             (EstadoF\==F,
-            adjacente(X,F,Distancia),
+            adjacente(X,F,_Distancia),
             not(member(X,EstadoA))),
             Novos),
     append(Outros,Novos,Todos),
@@ -176,7 +176,7 @@ resolveAestrelaLista([IdRua],FULL/Custo) :-
         resolve_aestrela(1,IdRua,FULL/Custo).
         
 resolveAestrelaLista([IdRua,IdRua2|T1],FULL/Custo) :-
-           resolve_aestrela(IdRua1, IdRua2, Caminho/CustoTmp),
+           resolve_aestrela(IdRua, IdRua2, Caminho/CustoTmp),
            resolveAestrelaLista([IdRua2|T1],F1/C1),
            tail(F1,FTemp),
 		   inverso(Caminho,CaminhoInverso),
@@ -260,7 +260,7 @@ retiraID(ID/_/_/_,ID).
 getRuasOrdenadas(Le, Sorted):- maplist(getEstimaCusto(), Le, List), sort(0, @=<, List,  LS), maplist(retiraC(),LS, Sorted).
 getRuasOrdenadasPorID(L,LResult) :- sort(0,@=<,L,LSorted),maplist(retiraID(),LSorted, LResult).
 
-transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+transPossiveis(Idest, Trans,C,TF,PesoT,Prazo,Dist) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
                                      resolve(LRuasOrd,C/Dist), 
                                      getPesoTotal(LRuas,PesoT),
@@ -269,7 +269,7 @@ transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas),
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
-transPossiveisBFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+transPossiveisBFS(Idest,Trans,C,TF,PesoT,Prazo,Dist) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
                                      resolveBFS(LRuasOrd,C,Dist), 
                                      getPesoTotal(LRuas,PesoT),
@@ -278,7 +278,7 @@ transPossiveisBFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
-transPossiveisDFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+transPossiveisDFS(Idest,Trans,C,TF,PesoT,Prazo,Dist) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
                                      resolveDFS(LRuasOrd,C,Dist), 
                                      getPesoTotal(LRuas,PesoT),
@@ -287,7 +287,7 @@ transPossiveisDFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
-transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade) :- getRuasDoEstafeta(Idest,LRuas), 
+transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade,Dist) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
                                      resolveDFSlim(LRuasOrd,C,Dist,Profundidade), 
                                      getPesoTotal(LRuas,PesoT),
@@ -423,35 +423,6 @@ replace(OldFact, NewFact) :-
 
 entregaRealizada(IdEstafeta, IdEnc, Trans):- replace(entrega(I,IdEstafeta,IdEnc,D,A,porDefinir),entrega(I,IdEstafeta,IdEnc,D, A,Trans)),
                                              replace(encomenda(IdEnc,P, V, C,Pz,R,Pc,emDistribuicao), encomenda(IdEnc,P, V, C,Pz,R,Pc,efetuada)).
-
-%Determina o tempo de entrega num dado transporte
-tempoEntrega(ID,Distancia,Peso,Tempo) :- getTransporteByID(ID,X),
-										 tempoEntregaAux(X,Distancia,Peso,Tempo).
-
-tempoEntregaAux(transporte(ID,_,PesoMax,Velocidade,_),Distancia,Peso,Tempo) :-
-										Peso =< PesoMax,
-										descrescimoVelocidadePorKg(ID,DescrescimoVelocidade),
-										Tempo is (Distancia/(Velocidade - DescrescimoVelocidade*Peso)),!.
-descrescimoVelocidadePorKg(1,0.7).
-descrescimoVelocidadePorKg(2,0.5).
-descrescimoVelocidadePorKg(3,0.1).
-
-getTransporteByID(ID,X) :- findall(transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),[X|_]).
-getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),
-			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),[X|_]).
-%Determina o transporte mais ecológico que consiga entregar determinada entrega a tempo
-escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico) :- findall(ID,transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),L),
-														sort(0,@>,L,SortedList),
-														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Preco,Estado,data(D,M,A,H,Min))),
-														escolheTranspMaisEcologicoAux(L,Prazo,Distancia,Peso,IdTransporteEcologico).
-
-escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologico) :- tempoEntrega(X,Distancia,Peso,Tempo),
-																					   Tempo =< Prazo,
-																					   IdTransporteEcologico is X,!.
-escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
-
-
-
 
 
 %identificar quais as rotas com maior número de entregas (por volume e peso)
