@@ -54,7 +54,9 @@ executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
 			     printList(CN),nl,!.
 executa(X) :- X =:= 3, nl,write('Insira o ID da rua atual'),nl,
 						read(Nodo),nl,
-						dfs(Nodo,L,C),
+						write('Insira o ID da rua que pretende ir'),nl,
+						read(NodoFinal),nl,
+						dfs(Nodo,NodoFinal,L,C),
 						nomeRua(L,Ruas),
 						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
 executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
@@ -64,7 +66,15 @@ executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
 							breadth_first(NodoI, NodoF, Cam, D),
 							nomeRua(Cam,Ruas),
 							printList(Ruas),nl,write('Distância: '),write(D),nl,!.
-executa(X) :- X =:= 5, nl,write('Não implementada'),nl,!.
+executa(X) :- X =:= 5, nl,write('Insira o ID da rua atual'),nl,
+						read(Nodo),nl,
+						write('Insira o ID da rua que pretende ir'),nl,
+						read(NodoFinal),nl,
+						write('Insira a Profundidade'),nl,
+						read(Profundidade),nl,
+						dfslim(Nodo,NodoFinal,L,C,Profundidade),
+						nomeRua(L,Ruas),
+						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
 executa(X) :- X =:= 6, nl,write('Insira o ID da encomenda:'),nl,
 						  read(IdEncomenda),nl,
 						  write('Insira a distancia: '),nl,
@@ -97,18 +107,34 @@ printList(_) :- write('Não é lista'),nl.
 % profundidade DFS
 
 
-dfs(Nodo,[Nodo|Caminho],C) :- profundidade(Nodo,[Nodo],Caminho,C).
+dfs(Nodo,NodoFinal,[Nodo|Caminho],C) :- profundidade(Nodo,NodoFinal,[Nodo],Caminho,C).
 
 
-profundidade(T,_,[],0) :- goal(T).
+profundidade(Nodo,NodoFinal,_,[],0) :- Nodo=:=NodoFinal.
 
-profundidade(Nodo,Historico,[ProxNodo|Caminho],Distancia) :- 
+profundidade(Nodo,NodoFinal,Historico,[ProxNodo|Caminho],Distancia) :- 
     adjacente(Nodo,ProxNodo,Distancia1),
     not(member(ProxNodo,Historico)),
-    profundidade(ProxNodo,[ProxNodo|Historico],Caminho,Distancia2), Distancia is Distancia1+Distancia2.
+    profundidade(ProxNodo,NodoFinal,[ProxNodo|Historico],Caminho,Distancia2), Distancia is Distancia1+Distancia2.
 
 adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,Nodo,ProxNodo,Distancia).
 adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,ProxNodo,Nodo,Distancia).
+
+% DFS limitada 
+
+dfslim(Nodo,NodoFinal,[Nodo|Caminho],Dist,Profundidade) :- profundidadelim(Nodo,NodoFinal,[Nodo],Caminho,Dist,Profundidade).
+
+profundidadelim(_,_,_,_,_,0) :- !, fail.
+profundidadelim(Nodo,NodoFinal,_,[],0,_) :- Nodo=:=NodoFinal.
+
+profundidadelim(Nodo,NodoFinal,Historico,[ProxNodo|Caminho],Distancia,Profundidade) :- 
+    adjacente(Nodo,ProxNodo,Distancia1),
+    not(member(ProxNodo,Historico)),
+    Profundidade1 is Profundidade-1,
+    profundidadelim(ProxNodo,NodoFinal,[ProxNodo|Historico],Caminho,Distancia2,Profundidade1), Distancia is Distancia1+Distancia2.
+
+
+
 
 % BFS
 
