@@ -17,7 +17,6 @@ main :- write('\033[H\033[2J'),
 	write('\u001b[34m[3]\u001b[0m Encontrar caminho até ao nodo (DFS)'),nl,
 	write('\u001b[34m[4]\u001b[0m Encontrar caminho até ao nodo (BFS)'),nl,
 	write('\u001b[34m[5]\u001b[0m Encontrar caminho até ao nodo (DFS com profundidade limitada)'),nl,
-	write('\u001b[34m[6]\u001b[0m Escolher o meio de transporte mais ecológico'),nl,
 	write('\u001b[34m[7]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
@@ -180,10 +179,11 @@ resolveAestrelaLista([IdRua],FULL/Custo) :-
         resolve_aestrela(1,IdRua,FULL/Custo).
         
 resolveAestrelaLista([IdRua,IdRua2|T1],FULL/Custo) :-
-           resolve_aestrela(IdRua2, IdRua, Caminho/CustoTmp),
+           resolve_aestrela(IdRua1, IdRua2, Caminho/CustoTmp),
            resolveAestrelaLista([IdRua2|T1],F1/C1),
            tail(F1,FTemp),
-           append(Caminho, FTemp, FULL),
+		   inverso(Caminho,CaminhoInverso),
+           append(CaminhoInverso, FTemp, FULL),
            Custo is C1+CustoTmp.
 
 resolve_aestrela(Goal,Nodo, Caminho/Custo) :-
@@ -258,9 +258,10 @@ getPrazo([_/_/Pz/_|T], Prazo) :-
 getEstimaCusto(Id/_/_/_,D/Id):- findall(D,estima(1,Id,D),[D|_]).
 
 retiraC(_/ID,ID).
+retiraID(ID/_/_/_,ID).
 
 getRuasOrdenadas(Le, Sorted):- maplist(getEstimaCusto(), Le, List), sort(0, @=<, List,  LS), maplist(retiraC(),LS, Sorted).
-
+getRuasOrdenadasPorID(L,LResult) :- sort(0,@=<,L,LSorted),maplist(retiraID(),LSorted, LResult).
 
 transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
                                      getRuasOrdenadas(LRuas,LRuasOrd), 
@@ -290,7 +291,7 @@ transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade) :- getRuasDoEsta
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
 transPossiveisAestrela(Idest,Trans,C,TF,PesoT,Prazo) :-  getRuasDoEstafeta(Idest,LRuas), 
-						  			getRuasOrdenadas(LRuas,LRuasOrd), 
+						  			getRuasOrdenadasPorID(LRuas,LRuasOrd), 
                           			resolveAestrelaLista(LRuasOrd,C/Dist),
 									getPesoTotal(LRuas,PesoT),
                                     getPrazo(LRuas,Prazo),

@@ -139,6 +139,7 @@ encomenda(5,7,43,4,16,7,203,efetuada,data(3,12,2021,08,00)).
 
 encomenda(6,7,43,4,16,4,20,emDistribuicao,data(3,12,2021,08,00)).
 encomenda(7,8,40,4,10,5,20,emDistribuicao,data(3,12,2021,08,00)).
+encomenda(8,5,40,4,10,9,20,emDistribuicao,data(3,12,2021,08,00)).
 
 %------------------Rota---------------
 rota(1,[2,3]).
@@ -148,7 +149,7 @@ rota(3,[6,4,5]).
 %O ranking é calculado na função 6. com base na lista de encomendas
 %estafeta(identificador, nome, lista de encomendas)
 estafeta(1,'João',[1,3,4]).
-estafeta(2,'Pedro',[2,6,7]).
+estafeta(2,'Pedro',[2,6,7,8]).
 
 %-----------------Entregas------------------
 %entrega(identificador, IdEstafeta, IdEncomenda, data da entrega,avaliação média 0-5,transporte)
