@@ -72,6 +72,7 @@ estima(9,29).
 estima(10,16).
 estima(11,5).
 estima(12,14).
+goal(1).
 
 %-----------------Andar------------------
 %andar(identificador, id_estrada)

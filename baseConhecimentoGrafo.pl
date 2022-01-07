@@ -37,7 +37,6 @@ estrada(15,8,9,8).
 estrada(16,8,11,11).
 estrada(17,9,12,7).
 estrada(18,10,12,8).
-goal(1).
 
 %----------Estima distâncias-----------
 estima(1,1,0).
