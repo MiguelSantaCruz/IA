@@ -23,13 +23,7 @@ main :- write('\033[H\033[2J'),
 	write('\u001b[34m[9]\u001b[0m Calcular o número de encomendas entregues e não entregues'),nl,
 	write('\u001b[34m[10]\u001b[0m Calcular o peso total transportado por estafeta num determinado dia'),nl,
 	write('\u001b[34m[11]\u001b[0m Adicionar termo à base de conhecimento'),nl,
-	write('\u001b[34m[12]\u001b[0m Encontrar caminho até ao nodo (Heurística A*)'),nl,
-	write('\u001b[34m[13]\u001b[0m Encontrar caminho até ao nodo (Greddy search)'),nl,
-	write('\u001b[34m[14]\u001b[0m Encontrar caminho até ao nodo (DFS)'),nl,
-	write('\u001b[34m[15]\u001b[0m Encontrar caminho até ao nodo (BFS)'),nl,
-	write('\u001b[34m[16]\u001b[0m Encontrar caminho até ao nodo (DFS com profundidade limitada)'),nl,
-	write('\u001b[34m[17]\u001b[0m Escolher o meio de transporte mais ecológico'),nl,
-	write('\u001b[34m[18]\u001b[0m Sair'),nl,
+	write('\u001b[34m[12]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
 	read(Escolha),
@@ -37,9 +31,9 @@ main :- write('\033[H\033[2J'),
 	executa(Escolha),
   	nl,nl,fail.
  
-%Função que valida as escolhas feitas( se estão entre 1 e 18)  
+%Função que valida as escolhas feitas( se estão entre 1 e 12)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
-validaEscolha(X) :- X > 18,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
+validaEscolha(X) :- X > 12,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
@@ -132,39 +126,7 @@ executa(X) :- X =:= 11, nl,write('Termos disponíveis para adicionar:'),nl,
 			   write('Insira Termo a adicionar :'),nl,
 			   read(Termo),nl,
 			   evolucao(Termo),nl,!.
-executa(X) :- X =:= 12, nl,write('Insira o ID da rua atual'),nl,
-						read(Nodo),nl,
-						resolve_aestrela(Nodo,Cam/C),
-						nomeRua(Cam,Ruas),
-						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
-executa(X) :- X =:= 13, nl, write('Insira ID Estafeta : '),nl,
-                            read(IDestafeta),nl,
-			     		    getRuaPorEstafeta(IDestafeta,Idrua),
-			     			resolve_gulosa(Idrua,Caminho/_),
-			     			inverso(Caminho,Cinv),
-			     			nomeRua(Cinv,CN),
-			     			printList(CN),nl,!.
-executa(X) :- X =:= 14, nl,write('Insira o ID da rua atual:'),nl,
-						read(Nodo),nl,
-						dfs(Nodo,L,C),
-						nomeRua(L,Ruas),
-						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
-executa(X) :- X =:= 15, nl,write('Insira o ID da rua atual:'),nl,
-						read(NodoI),nl,
-						write('Insira o ID da rua que pretende ir:'),nl,
-						read(NodoF),nl,
-						breadth_first(NodoI, NodoF, Cam, D),
-						nomeRua(Cam,Ruas),
-						printList(Ruas),nl,write('Distância: '),write(D),nl,!.
-executa(X) :- X =:= 16, nl,write('Não implementada'),nl,!.
-executa(X) :- X =:= 17, nl,write('Insira o ID da encomenda:'),nl,
-						  read(IdEncomenda),nl,
-						  write('Insira a distancia: '),nl,
-						  read(Distancia),nl,
-						  escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico),
-						  getTransporteByID(IdTransporteEcologico,transporte(_,Nome,_,_,_)),
-						  write('Meio de transporte a utilizar: '),write(Nome),nl,!.
-executa(X) :- X =:= 18, halt.
+executa(X) :- X =:= 12, halt.
 
 
 %Funções auxiliares gerais ------------------------------------------
@@ -559,161 +521,3 @@ listaEncomendasParaPeso([H|T],PesoTotal):- listaEncomendasParaPeso([H],Peso1),
 										   PesoTotal is Peso1 + Peso2.
 										
 dataSimples(data(Dia,Mes,Ano,_,_),data(Dia2,Mes2,Ano2,_,_)) :- Dia == Dia2, Mes == Mes2 , Ano == Ano2.
-
-%----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-% profundidade DFS
-
-
-dfs(Nodo,[Nodo|Caminho],C) :- profundidade(Nodo,[Nodo],Caminho,C).
-
-
-profundidade(T,_,[],0) :- goal(T).
-
-profundidade(Nodo,Historico,[ProxNodo|Caminho],Distancia) :- 
-    adjacente(Nodo,ProxNodo,Distancia1),
-    not(member(ProxNodo,Historico)),
-    profundidade(ProxNodo,[ProxNodo|Historico],Caminho,Distancia2), Distancia is Distancia1+Distancia2.
-
-adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,Nodo,ProxNodo,Distancia).
-adjacente(Nodo, ProxNodo,Distancia) :- estrada(_,ProxNodo,Nodo,Distancia).
-
-% BFS
-
-
-breadth_first(Orig, Dest, Cam, D):- bfs(Dest,[[Orig]],Cam),
-									  			bfsDist(Cam, D).
-									 
-									 
-bfsDist([X,Y], D) :- adjacente(X,Y,D).
-bfsDist([X,Y|T], D) :- adjacente(X,Y,D1),
-								bfsDist([Y|T], D2),
-								D is D1+D2.		 
-				
-
-bfs(EstadoF,[[EstadoF|T]|_],Solucao)  :- reverse([EstadoF|T],Solucao).
-bfs(EstadoF,[EstadoA|Outros],Solucao) :- 
-    EstadoA = [F|_],
-    findall([X|EstadoA],
-            (EstadoF\==F,
-            adjacente(X,F,Distancia),
-            not(member(X,EstadoA))),
-            Novos),
-    append(Outros,Novos,Todos),
-    bfs(EstadoF,Todos,Solucao).
-
-% A estrela --------------------------
-
-resolve_aestrela(Nodo, Caminho/Custo) :-
-	estima(Nodo, Estima),
-	aestrela([[Nodo]/0/Estima], InvCaminho/Custo/_),
-	inverso(InvCaminho, Caminho).
-
-aestrela(Caminhos, Caminho) :-
-	obtem_melhor(Caminhos, Caminho),
-	Caminho = [Nodo|_]/_/_,
-	goal(Nodo).
-
-aestrela(Caminhos, SolucaoCaminho) :-
-	obtem_melhor(Caminhos, MelhorCaminho),
-	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
-	expande_aestrela(MelhorCaminho, ExpCaminhos),
-	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
-    aestrela(NovoCaminhos, SolucaoCaminho).	
-
-obtem_melhor([Caminho], Caminho) :- !.
-obtem_melhor([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
-	Custo1 + Est1 =< Custo2 + Est2, !,
-	obtem_melhor([Caminho1/Custo1/Est1|Caminhos], MelhorCaminho). 
-obtem_melhor([_|Caminhos], MelhorCaminho) :- 
-	           obtem_melhor(Caminhos, MelhorCaminho).
-
-
-
-expande_aestrela(Caminho, ExpCaminhos) :-
-	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
-%Gulosa----------------------------------------------------------------------------------
-getRuaPorEstafeta(IdEst,Idrua):- findall(IDenc,estafeta(IdEst,_,[IDenc|_]),[Idenc]),
-					findall(Idenc,encomenda(Idenc, _, _, _, _,Idrua,_, _,_),[Idrua]).
-
-nomeRua([],[]).
-nomeRua([H|T],L):-findall(Nome,rua(H,Nome),[S|_]),
-                  nomeRua(T,Z),
-               L = [S|Z].
-
-
-resolve_gulosa(Nodo,CaminhoDistancia/CustoDist):-
-	estima(Nodo, Estima),
-	agulosa_distancia_g([[Nodo]/0/Estima], InvCaminho/CustoDist/_),
-	inverso(InvCaminho, CaminhoDistancia).
-
-agulosa_distancia_g(Caminhos, Caminho) :-
-	obtem_melhor_distancia_g(Caminhos, Caminho),
-	Caminho = [Nodo|_]/_/_,
-	goal(Nodo).
-
-agulosa_distancia_g(Caminhos, SolucaoCaminho) :-
-	obtem_melhor_distancia_g(Caminhos, MelhorCaminho),
-	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
-	expande_agulosa_distancia_g(MelhorCaminho, ExpCaminhos),
-	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
-        agulosa_distancia_g(NovoCaminhos, SolucaoCaminho).	
-
-obtem_melhor_distancia_g([Caminho], Caminho) :- !.
-obtem_melhor_distancia_g([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
-	Est1 =< Est2, !,
-	obtem_melhor_distancia_g([Caminho1/Custo1/Est1|Caminhos], MelhorCaminho). 
-obtem_melhor_distancia_g([_|Caminhos], MelhorCaminho) :- 
-	obtem_melhor_distancia_g(Caminhos, MelhorCaminho).
-	
-
-expande_agulosa_distancia_g(Caminho, ExpCaminhos) :-
-	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
-
-
-adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
-	estrada(_,Nodo, ProxNodo, PassoCusto),
-	\+member(ProxNodo, Caminho),
-	NovoCusto is Custo + PassoCusto,
-	estima(ProxNodo, Est).
-adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
-	estrada(_,ProxNodo, Nodo, PassoCusto),
-	\+member(ProxNodo, Caminho),
-	NovoCusto is Custo + PassoCusto,
-	estima(ProxNodo, Est).
-
-inverso(Xs, Ys):-
-	inverso(Xs, [], Ys).
-
-inverso([], Xs, Xs).
-inverso([X|Xs],Ys, Zs):-
-	inverso(Xs, [X|Ys], Zs).
-
-seleciona(E, [E|Xs], Xs).
-seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).									 
-
-%Determina o tempo de entrega num dado transporte
-tempoEntrega(ID,Distancia,Peso,Tempo) :- getTransporteByID(ID,X),
-										 tempoEntregaAux(X,Distancia,Peso,Tempo).
-
-tempoEntregaAux(transporte(ID,_,PesoMax,Velocidade,_),Distancia,Peso,Tempo) :-
-										Peso =< PesoMax,
-										descrescimoVelocidadePorKg(ID,DescrescimoVelocidade),
-										Tempo is (Distancia/(Velocidade - DescrescimoVelocidade*Peso)),!.
-descrescimoVelocidadePorKg(1,0.7).
-descrescimoVelocidadePorKg(2,0.5).
-descrescimoVelocidadePorKg(3,0.1).
-
-getTransporteByID(ID,X) :- findall(transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),[X|_]).
-getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),
-			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),[X|_]).
-%Determina o transporte mais ecológico que consiga entregar determinada entrega a tempo
-escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico) :- findall(ID,transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),L),
-														sort(0,@>,L,SortedList),
-														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Preco,Estado,data(D,M,A,H,Min))),
-														escolheTranspMaisEcologicoAux(L,Prazo,Distancia,Peso,IdTransporteEcologico).
-
-escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologico) :- tempoEntrega(X,Distancia,Peso,Tempo),
-																					   Tempo =< Prazo,
-																					   IdTransporteEcologico is X,!.
-escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
