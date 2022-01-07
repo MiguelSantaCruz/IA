@@ -60,6 +60,7 @@ rua(11,'Rodovia Raposo Tavares').
 rua(12,'Rua Tenente Cardoso').
 
 %----------Estima distâncias-----------
+
 estima(1,0).
 estima(2,3).
 estima(3,5).
@@ -72,7 +73,6 @@ estima(9,29).
 estima(10,16).
 estima(11,5).
 estima(12,14).
-
 
 %-----------------Andar------------------
 %andar(identificador, id_estrada)

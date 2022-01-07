@@ -4,6 +4,7 @@
 
 %carregar a base de conhecimento atual
 :- consult('baseConhecimentoGrafo.pl').
+:- discontiguous seleciona/3.
 
 %Loop principal que implementa o menu de interação com a aplicação
 %Nota:\u001b[32m é o código de cor para verde, \u001b[34m é o código de cor para vermelho e \u001b[0m é o código de reset de cor
@@ -31,15 +32,17 @@ validaEscolha(X) :- X > 7,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fai
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
-executa(X) :- X =:= 1, nl,write('Insira o ID da rua atual'),nl,
-						read(Nodo),nl,
-						resolve_aestrela(Nodo,Cam/C),
-						nomeRua(Cam,Ruas),
-						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
+executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
+						  read(IdEstafeta),nl,
+						  getRuasDoEstafeta(IdEstafeta,LRuas), 
+						  getRuasOrdenadas(LRuas,LRuasOrd), 
+                          resolveAestrelaLista(LRuasOrd,Caminho/Distancia), 
+						  inverso(Caminho,Cinv),
+						  nomeRua(Cinv,Ruas),write('Percurso: '),nl,
+						  printList(Ruas),nl,write('Distância: '),write(Distancia),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
-			     getRuaPorEstafeta(IDestafeta,Idrua/PT/PZ/_),
-			     transPossiveis(Idrua/PT/PZ/_, Trans,C,TempFinal),
+			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
 			     inverso(C,Cinv),
 			     nomeTr([Trans],T),
 			     nomeRua(Cinv,CN),
@@ -131,24 +134,34 @@ bfs(EstadoF,[EstadoA|Outros],Solucao) :-
     append(Outros,Novos,Todos),
     bfs(EstadoF,Todos,Solucao).
 
-%------
+% A estrela ------
 
-resolve_aestrela(Nodo, Caminho/Custo) :-
-	estima(Nodo, Estima),
-	aestrela([[Nodo]/0/Estima], InvCaminho/Custo/_),
+resolveAestrelaLista([IdRua],FULL/Custo) :- 
+        resolve_aestrela(1,IdRua,FULL/Custo).
+        
+resolveAestrelaLista([IdRua,IdRua2|T1],FULL/Custo) :-
+           resolve_aestrela(IdRua, IdRua2, Caminho/CustoTmp),
+           resolveAestrelaLista([IdRua2|T1],F1/C1),
+           tail(F1,FTemp),
+           append(Caminho, FTemp, FULL),
+           Custo is C1+CustoTmp.
+
+resolve_aestrela(Goal,Nodo, Caminho/Custo) :-
+	estima(Goal,Nodo, Estima),
+	aestrela([[Nodo]/0/Estima], InvCaminho/Custo/_,Goal),
 	inverso(InvCaminho, Caminho).
 
-aestrela(Caminhos, Caminho) :-
+aestrela(Caminhos, Caminho,Goal) :-
 	obtem_melhor(Caminhos, Caminho),
 	Caminho = [Nodo|_]/_/_,
-	goal(Nodo).
+	Nodo =:= Goal.
 
-aestrela(Caminhos, SolucaoCaminho) :-
+aestrela(Caminhos, SolucaoCaminho,Goal) :-
 	obtem_melhor(Caminhos, MelhorCaminho),
 	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
-	expande_aestrela(MelhorCaminho, ExpCaminhos),
+	expande_aestrela(MelhorCaminho, ExpCaminhos,Goal),
 	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
-    aestrela(NovoCaminhos, SolucaoCaminho).	
+    aestrela(NovoCaminhos, SolucaoCaminho,Goal).	
 
 obtem_melhor([Caminho], Caminho) :- !.
 obtem_melhor([Caminho1/Custo1/Est1,_/Custo2/Est2|Caminhos], MelhorCaminho) :-
@@ -159,28 +172,10 @@ obtem_melhor([_|Caminhos], MelhorCaminho) :-
 
 
 
-expande_aestrela(Caminho, ExpCaminhos) :-
-	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
+expande_aestrela(Caminho, ExpCaminhos,Goal) :-
+	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho,Goal), ExpCaminhos).
 
-%Gulosa----------------------------------------------------------------------------------
-
-getRuaPorEstafeta(IdEst,T):- findall(L,estafeta(IdEst,_,L),[Lenc|_]),
-					findall(Idrua/Peso/Prazo/Idenc,(member(Idenc,Lenc),encomenda(Idenc, Peso, _, _, Prazo,Idrua,_,emDistribuicao,_)),[T|_]).
-
-
-
-getPesoTotal([],0).
-getPesoTotal([_/Peso/_],Peso).
-getPesoTotal([_/P/_,_/P2/_|T], Peso) :- P3 is P+P2,
-                                 getPesoTotal(T,Ps),
-                                 Peso is P3 + Ps.
-
-
-transPossiveis(Idrua/PesoT/Prazo/_, Trans,C,TF) :-resolve_gulosa(Idrua,C/Dist),
-        ((PesoT=<100,PesoT>20) -> Trans is 3;
-         (PesoT=<20,PesoT>5)   -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
-         (PesoT>0,PesoT=<5)    -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
-
+%Auxiliares para definir ruas das encomenda----------------------------------------------------------------------------------
 
 nomeRua([],[]).
 nomeRua([H|T],L):-findall(Nome,rua(H,Nome),[S|_]),
@@ -199,24 +194,73 @@ escolheM_C(Dist,T,Prazo,Peso,TF) :- TempoM is Dist/ (35 - (0.5 * Peso)),TempoC i
 escolheMaisEco(Dist,T,Prazo,Peso,TF) :- TempoB is (Dist)/ (10 - (0.7 * Peso)), TempoM is Dist/ (35 - (0.5 * Peso)),TempoC is Dist/ (25 - (0.1 * Peso)),
 				((TempoB =< Prazo) -> T is 1,TF is TempoB;
 				(TempoM =< Prazo) -> T is 2,TF is TempoM;
-				T is 3,TF is TempoC).							
+				T is 3,TF is TempoC).		
+				
+getRuasDoEstafeta(IdEst,T):- findall(L,estafeta(IdEst,_,L),[Lenc|_]),
+					findall(Idrua/Peso/Prazo/Idenc,(member(Idenc,Lenc),encomenda(Idenc, Peso, _, _, Prazo,Idrua,_,emDistribuicao,_)),T).
+					
 
-resolve_gulosa(Nodo,CaminhoDistancia/CustoDist):-
-	estima(Nodo, Estima),
-	agulosa_distancia_g([[Nodo]/0/Estima], InvCaminho/CustoDist/_),
-	inverso(InvCaminho, CaminhoDistancia).
+getPesoTotal([],0).
+getPesoTotal([_/Peso/_/_],Peso).
+getPesoTotal([_/P/_/_,_/P2/_/_|T], Peso) :- P3 is P+P2,
+                                 getPesoTotal(T,Ps),
+                                 Peso is P3 + Ps.
+getPrazo([_/_/Prazo/_], Prazo).
+getPrazo([_/_/Pz/_|T], Prazo) :-
+    getPrazo(T, TPrazo),
+    Prazo is min(Pz, TPrazo). 
+    
+    
+getEstimaCusto(Id/_/_/_,D/Id):- findall(D,estima(1,Id,D),[D|_]).
 
-agulosa_distancia_g(Caminhos, Caminho) :-
+retiraC(_/ID,ID).
+
+getRuasOrdenadas(Le, Sorted):- maplist(getEstimaCusto(), Le, List), sort(0, @=<, List,  LS), maplist(retiraC(),LS, Sorted).
+
+
+transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+                                     getRuasOrdenadas(LRuas,LRuasOrd), 
+                                     resolve(LRuasOrd,C/Dist), 
+                                     getPesoTotal(LRuas,PesoT),
+                                     getPrazo(LRuas,Prazo),
+                                     ((PesoT=<100,PesoT>20) -> Trans is 3;
+                                     (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
+                                     (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
+	
+
+
+
+
+%Tem todas as ruas das entregas
+resolve([IdRua],FULL/Custo) :- 
+        resolve_gulosa(IdRua,1,FULL/Custo).
+        
+resolve([IdRua,IdRua2|T1],FULL/Custo) :-
+           resolve_gulosa(IdRua, IdRua2, Caminho/CustoTmp),
+           resolve([IdRua2|T1],F1/C1),
+           tail(F1,FTemp),
+           append(Caminho, FTemp, FULL),
+           Custo is C1+CustoTmp.
+
+
+%Gulosa----------------------------------------------------------------------------------
+resolve_gulosa(Origem, Destino, CaminhoDistancia/CustoDist) :-
+        getEstimaG(Origem,Destino,EstimaD),
+	agulosa_distancia_g([[Origem]/0/EstimaD], InvCaminho/CustoDist/_,Destino),
+	reverse(InvCaminho, CaminhoDistancia).
+
+
+agulosa_distancia_g(Caminhos, Caminho,Destino) :-
 	obtem_melhor_distancia_g(Caminhos, Caminho),
 	Caminho = [Nodo|_]/_/_,
-	goal(Nodo).
-
-agulosa_distancia_g(Caminhos, SolucaoCaminho) :-
+	Nodo == Destino.
+agulosa_distancia_g(Caminhos, SolucaoCaminho, Destino) :-
 	obtem_melhor_distancia_g(Caminhos, MelhorCaminho),
 	seleciona(MelhorCaminho, Caminhos, OutrosCaminhos),
-	expande_agulosa_distancia_g(MelhorCaminho, ExpCaminhos),
+	expande_agulosa_distancia_g(MelhorCaminho, ExpCaminhos,Destino),
 	append(OutrosCaminhos, ExpCaminhos, NovoCaminhos),
-        agulosa_distancia_g(NovoCaminhos, SolucaoCaminho).	
+        agulosa_distancia_g(NovoCaminhos, SolucaoCaminho, Destino).	
+
 
 obtem_melhor_distancia_g([Caminho], Caminho) :- !.
 obtem_melhor_distancia_g([Caminho1/Custo1/Est1,_/_/Est2|Caminhos], MelhorCaminho) :-
@@ -226,31 +270,46 @@ obtem_melhor_distancia_g([_|Caminhos], MelhorCaminho) :-
 	obtem_melhor_distancia_g(Caminhos, MelhorCaminho).
 	
 
-expande_agulosa_distancia_g(Caminho, ExpCaminhos) :-
-	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho), ExpCaminhos).
+expande_agulosa_distancia_g(Caminho, ExpCaminhos,Destino) :-
+	findall(NovoCaminho, adjacente2(Caminho,NovoCaminho, Destino), ExpCaminhos). % ver este destino
+	
+
+
+adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/EstDist, Destino) :-
+	getEstrada(Nodo, ProxNodo, PassoCustoDist),
+	\+ member(ProxNodo, Caminho),
+	NovoCusto is Custo + PassoCustoDist,
+	estima(ProxNodo, Destino, EstDist).
+adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/EstDist, Destino) :-
+	getEstrada(Nodo, ProxNodo, PassoCustoDist),
+	\+ member(ProxNodo, Caminho),
+	NovoCusto is Custo + PassoCustoDist,
+	estima( Destino,ProxNodo, EstDist).	
+	
+	
+seleciona(E, [E|Xs], Xs).
+seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).
+
+
+getEstimaG(Origem, Destino, Distancia):- estima(Origem, Destino, Distancia).
+getEstimaG(Origem, Destino, Distancia):- !, estima(Destino, Origem, Distancia).
+
+getEstrada(Origem, Destino, Distancia):- estrada(_,Origem, Destino, Distancia).
+getEstrada(Origem, Destino, Distancia):- !, estrada(_,Destino, Origem, Distancia).
 
 
 
-adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
-	estrada(_,Nodo, ProxNodo, PassoCusto),
-	\+member(ProxNodo, Caminho),
-	NovoCusto is Custo + PassoCusto,
-	estima(ProxNodo, Est).
-adjacente2([Nodo|Caminho]/Custo/_, [ProxNodo,Nodo|Caminho]/NovoCusto/Est) :-
-	estrada(_,ProxNodo, Nodo, PassoCusto),
-	\+member(ProxNodo, Caminho),
-	NovoCusto is Custo + PassoCusto,
-	estima(ProxNodo, Est).
+tail([], []).
+tail([_|T],T).
 
 inverso(Xs, Ys):-
 	inverso(Xs, [], Ys).
 
 inverso([], Xs, Xs).
-inverso([X|Xs],Ys, Zs):-
-	inverso(Xs, [X|Ys], Zs).
+inverso([X|Xs],Ys, Zs):-inverso(Xs, [X|Ys], Zs).
 
-seleciona(E, [E|Xs], Xs).
-seleciona(E, [X|Xs], [X|Ys]) :- seleciona(E, Xs, Ys).
+seleciona(E,[E|Xs],Xs).
+seleciona(E,[X|Xs],[X|Ys]):-seleciona(E, Xs, Ys).
 
 
 replace(OldFact, NewFact) :-
@@ -258,7 +317,7 @@ replace(OldFact, NewFact) :-
     assert(NewFact).
 
 entregaRealizada(IdEstafeta, IdEnc, Trans):- replace(entrega(I,IdEstafeta,IdEnc,D,A,porDefinir),entrega(I,IdEstafeta,IdEnc,D, A,Trans)),
-                                               replace(encomenda(IdEnc,P, V, C,Pz,R,Pc,emDistribuicao), encomenda(IdEnc,P, V, C,Pz,R,Pc,efetuada)).
+                                             replace(encomenda(IdEnc,P, V, C,Pz,R,Pc,emDistribuicao), encomenda(IdEnc,P, V, C,Pz,R,Pc,efetuada)).
 
 %Determina o tempo de entrega num dado transporte
 tempoEntrega(ID,Distancia,Peso,Tempo) :- getTransporteByID(ID,X),
@@ -273,17 +332,15 @@ descrescimoVelocidadePorKg(2,0.5).
 descrescimoVelocidadePorKg(3,0.1).
 
 getTransporteByID(ID,X) :- findall(transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),[X|_]).
-getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),
-			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua,Transporte, Preco,Data),[X|_]).
+getEncomendaPorId(Id,X) :- findall(encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),
+			   encomenda(Id, Peso, Volume, Cliente, Prazo,Rua, Preco,Estado,Data),[X|_]).
 %Determina o transporte mais ecológico que consiga entregar determinada entrega a tempo
 escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico) :- findall(ID,transporte(ID,Nome, PesoMax, Velocidade, IndiceEcologico),L),
 														sort(0,@>,L,SortedList),
-														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Trans,Preco,data(D,M,A,H,Min))),
+														getEncomendaPorId(IdEncomenda,encomenda(Id,Peso,Vol,IdCliente,Prazo,Rua,Preco,Estado,data(D,M,A,H,Min))),
 														escolheTranspMaisEcologicoAux(L,Prazo,Distancia,Peso,IdTransporteEcologico).
 
 escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologico) :- tempoEntrega(X,Distancia,Peso,Tempo),
 																					   Tempo =< Prazo,
 																					   IdTransporteEcologico is X,!.
 escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
-																					
-												
