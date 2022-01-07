@@ -17,7 +17,7 @@ main :- write('\033[H\033[2J'),
 	write('\u001b[34m[3]\u001b[0m Encontrar circuito utilizado (DFS)'),nl,
 	write('\u001b[34m[4]\u001b[0m Encontrar circuito utilizado (BFS)'),nl,
 	write('\u001b[34m[5]\u001b[0m Encontrar circuito utilizado com profundidade limitada)'),nl,
-	write('\u001b[34m[7]\u001b[0m Sair'),nl,
+	write('\u001b[34m[6]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
 	read(Escolha),
@@ -25,7 +25,7 @@ main :- write('\033[H\033[2J'),
 	executa(Escolha),
   	nl,nl,fail.
  
-%Função que valida as escolhas feitas( se estão entre 1 e 17)  
+%Função que valida as escolhas feitas( se estão entre 1 e 6)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(X) :- X > 6,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
@@ -42,7 +42,7 @@ executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
 			  write('Nome do transporte: '), printList(T),
 			  write('Tempo da entrega:'),write(TempFinal),nl,
 			  write('Percurso: '),nl,
-			  printList(CN),nl,!.
+			  printList(CN),nl,write('Distância: '),write(),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
 			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
@@ -93,14 +93,7 @@ executa(X) :- X =:= 5, nl,write('Insira o ID do estafeta'),nl,
 				    write('Tempo da entrega:'),write(TempFinal),nl,
 				    write('Percurso: '),nl,
 				    printList(CN),nl,!.
-executa(X) :- X =:= 6, nl,write('Insira o ID da encomenda:'),nl,
-						  read(IdEncomenda),nl,
-						  write('Insira a distancia: '),nl,
-						  read(Distancia),nl,
-						  escolheTranspMaisEcologico(IdEncomenda,Distancia,IdTransporteEcologico),
-						  getTransporteByID(IdTransporteEcologico,transporte(_,Nome,_,_,_)),
-						  write('Meio de transporte a utilizar: '),write(Nome),nl,!.
-executa(X) :- X =:= 7, halt.		
+executa(X) :- X =:= 6, halt.	
 
 
 %Funções auxiliares gerais ------------------------------------------
