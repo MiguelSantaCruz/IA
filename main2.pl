@@ -12,11 +12,11 @@
 main :- write('\033[H\033[2J'),
 	repeat,
 	write('\u001b[32mGreen distribution\u001b[0m 🌲 --------------------------------------------------------------------------'),nl,
-	write('\u001b[34m[1]\u001b[0m Encontrar caminho até ao nodo (Heurística A*)'),nl,
-	write('\u001b[34m[2]\u001b[0m Encontrar caminho até ao nodo (Greddy search)'),nl,
-	write('\u001b[34m[3]\u001b[0m Encontrar caminho até ao nodo (DFS)'),nl,
-	write('\u001b[34m[4]\u001b[0m Encontrar caminho até ao nodo (BFS)'),nl,
-	write('\u001b[34m[5]\u001b[0m Encontrar caminho até ao nodo (DFS com profundidade limitada)'),nl,
+	write('\u001b[34m[1]\u001b[0m Encontrar circuito utilizado  (Heurística A*)'),nl,
+	write('\u001b[34m[2]\u001b[0m Encontrar circuito utilizado (Greddy search)'),nl,
+	write('\u001b[34m[3]\u001b[0m Encontrar circuito utilizado (DFS)'),nl,
+	write('\u001b[34m[4]\u001b[0m Encontrar circuito utilizado (BFS)'),nl,
+	write('\u001b[34m[5]\u001b[0m Encontrar circuito utilizado com profundidade limitada)'),nl,
 	write('\u001b[34m[7]\u001b[0m Sair'),nl,
 	nl,
 	write('Insira escolha: '),nl,
@@ -27,22 +27,22 @@ main :- write('\033[H\033[2J'),
  
 %Função que valida as escolhas feitas( se estão entre 1 e 17)  
 validaEscolha(X) :- X =< 0,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
-validaEscolha(X) :- X > 7,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
+validaEscolha(X) :- X > 6,write('\u001b[31mEscolha inválida\u001b[0m'),nl,!,fail.
 validaEscolha(_).
 
 %Função que chama as funções que implementam as funcionalidades
 executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
-						  read(IdEstafeta),nl,
-						  transPossiveisAestrela(IdEstafeta,Trans,C,TempFinal,PT,PZ),
-						  inverso(C,Cinv),
-						  nomeTr([Trans],T),
-						  nomeRua(Cinv,CN),
-						  write('Peso da encomenda: '), write(PT),nl,
-						  write('Prazo de entrega(horas): '), write(PZ),nl,
-						  write('Nome do transporte: '), printList(T),
-						  write('Tempo da entrega:'),write(TempFinal),nl,
-						  write('Percurso: '),nl,
-						  printList(CN),nl,!.
+			  read(IdEstafeta),nl,
+			  transPossiveisAestrela(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+			  inverso(C,Cinv),
+			  nomeTr([Trans],T),
+			  nomeRua(Cinv,CN),
+			  write('Peso da encomenda: '), write(PT),nl,
+			  write('Prazo de entrega(horas): '), write(PZ),nl,
+			  write('Nome do transporte: '), printList(T),
+			  write('Tempo da entrega:'),write(TempFinal),nl,
+			  write('Percurso: '),nl,
+			  printList(CN),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
 			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
