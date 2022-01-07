@@ -52,13 +52,18 @@ executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
 			     write('Tempo da entrega:'),write(TempFinal),nl,
 			     write('Percurso: '),nl,
 			     printList(CN),nl,!.
-executa(X) :- X =:= 3, nl,write('Insira o ID da rua atual'),nl,
-						read(Nodo),nl,
-						write('Insira o ID da rua que pretende ir'),nl,
-						read(NodoFinal),nl,
-						dfs(Nodo,NodoFinal,L,C),
-						nomeRua(L,Ruas),
-						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
+executa(X) :- X =:= 3, nl,write('Insira o ID do estafeta'),nl,
+					read(IdEstafeta),nl,
+					transPossiveisDFS(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+					inverso(C,Cinv),
+					nomeTr([Trans],T),
+			     	nomeRua(Cinv,CN),
+				    write('Peso da encomenda: '), write(PT),nl,
+				    write('Prazo de entrega(horas): '), write(PZ),nl,
+				    write('Nome do transporte: '), printList(T),
+				    write('Tempo da entrega:'),write(TempFinal),nl,
+				    write('Percurso: '),nl,
+				    printList(CN),nl,!.
 executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
 							read(NodoI),nl,
 							write('Insira o ID da rua que pretende ir'),nl,
@@ -66,15 +71,20 @@ executa(X) :- X =:= 4, nl,write('Insira o ID da rua atual'),nl,
 							breadth_first(NodoI, NodoF, Cam, D),
 							nomeRua(Cam,Ruas),
 							printList(Ruas),nl,write('Distância: '),write(D),nl,!.
-executa(X) :- X =:= 5, nl,write('Insira o ID da rua atual'),nl,
-						read(Nodo),nl,
-						write('Insira o ID da rua que pretende ir'),nl,
-						read(NodoFinal),nl,
-						write('Insira a Profundidade'),nl,
-						read(Profundidade),nl,
-						dfslim(Nodo,NodoFinal,L,C,Profundidade),
-						nomeRua(L,Ruas),
-						printList(Ruas),nl,write('Custo: '),write(C),nl,!.
+executa(X) :- X =:= 5, nl,write('Insira o ID do estafeta'),nl,
+					read(IdEstafeta),nl,
+					write('Insira a Profundidade'),nl,
+					read(Profundidade),nl,
+					transPossiveisDFSlim(IdEstafeta,Trans,C,TempFinal,PT,PZ,Profundidade),
+					inverso(C,Cinv),
+					nomeTr([Trans],T),
+			     	nomeRua(Cinv,CN),
+				    write('Peso da encomenda: '), write(PT),nl,
+				    write('Prazo de entrega(horas): '), write(PZ),nl,
+				    write('Nome do transporte: '), printList(T),
+				    write('Tempo da entrega:'),write(TempFinal),nl,
+				    write('Percurso: '),nl,
+				    printList(CN),nl,!.
 executa(X) :- X =:= 6, nl,write('Insira o ID da encomenda:'),nl,
 						  read(IdEncomenda),nl,
 						  write('Insira a distancia: '),nl,
@@ -257,9 +267,23 @@ transPossiveis(Idest, Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas),
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 	
+transPossiveisDFS(Idest,Trans,C,TF,PesoT,Prazo) :- getRuasDoEstafeta(Idest,LRuas), 
+                                     getRuasOrdenadas(LRuas,LRuasOrd), 
+                                     resolveDFS(LRuasOrd,C,Dist), 
+                                     getPesoTotal(LRuas,PesoT),
+                                     getPrazo(LRuas,Prazo),
+                                     ((PesoT=<100,PesoT>20) -> Trans is 3;
+                                     (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
+                                     (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
-
-
+transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade) :- getRuasDoEstafeta(Idest,LRuas), 
+                                     getRuasOrdenadas(LRuas,LRuasOrd), 
+                                     resolveDFSlim(LRuasOrd,C,Dist,Profundidade), 
+                                     getPesoTotal(LRuas,PesoT),
+                                     getPrazo(LRuas,Prazo),
+                                     ((PesoT=<100,PesoT>20) -> Trans is 3;
+                                     (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
+                                     (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
 %Tem todas as ruas das entregas
 resolve([IdRua],FULL/Custo) :- 
@@ -272,6 +296,25 @@ resolve([IdRua,IdRua2|T1],FULL/Custo) :-
            append(Caminho, FTemp, FULL),
            Custo is C1+CustoTmp.
 
+resolveDFS([IdRua],Caminho,Custo):-
+			dfs(IdRua,1,Caminho,Custo).
+
+resolveDFS([IdRua,IdRua2|T1],FULL,Custo) :-
+           dfs(IdRua,IdRua2,Caminho,CustoTmp),
+           resolveDFS([IdRua2|T1],F1,C1),
+           tail(F1,FTemp),
+           append(Caminho, FTemp, FULL),
+           Custo is C1+CustoTmp.
+
+resolveDFSlim([IdRua],Caminho,Custo,Profundidade):-
+			dfslim(IdRua,1,Caminho,Custo,Profundidade).
+
+resolveDFSlim([IdRua,IdRua2|T1],FULL,Custo,Profundidade) :-
+           dfslim(IdRua,IdRua2,Caminho,CustoTmp,Profundidade),
+           resolveDFS([IdRua2|T1],F1,C1),
+           tail(F1,FTemp),
+           append(Caminho, FTemp, FULL),
+           Custo is C1+CustoTmp.
 
 %Gulosa----------------------------------------------------------------------------------
 resolve_gulosa(Origem, Destino, CaminhoDistancia/CustoDist) :-
