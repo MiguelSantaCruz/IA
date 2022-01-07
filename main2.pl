@@ -34,12 +34,16 @@ validaEscolha(_).
 %Função que chama as funções que implementam as funcionalidades
 executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
 						  read(IdEstafeta),nl,
-						  getRuasDoEstafeta(IdEstafeta,LRuas), 
-						  getRuasOrdenadas(LRuas,LRuasOrd), 
-                          resolveAestrelaLista(LRuasOrd,Caminho/Distancia), 
-						  inverso(Caminho,Cinv),
-						  nomeRua(Cinv,Ruas),write('Percurso: '),nl,
-						  printList(Ruas),nl,write('Distância: '),write(Distancia),nl,!.
+						  transPossiveisAestrela(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+						  inverso(C,Cinv),
+						  nomeTr([Trans],T),
+						  nomeRua(Cinv,CN),
+						  write('Peso da encomenda: '), write(PT),nl,
+						  write('Prazo de entrega(horas): '), write(PZ),nl,
+						  write('Nome do transporte: '), printList(T),
+						  write('Tempo da entrega:'),write(TempFinal),nl,
+						  write('Percurso: '),nl,
+						  printList(CN),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
 			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
@@ -284,6 +288,16 @@ transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade) :- getRuasDoEsta
                                      ((PesoT=<100,PesoT>20) -> Trans is 3;
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
+
+transPossiveisAestrela(Idest,Trans,C,TF,PesoT,Prazo) :-  getRuasDoEstafeta(Idest,LRuas), 
+						  			getRuasOrdenadas(LRuas,LRuasOrd), 
+                          			resolveAestrelaLista(LRuasOrd,C/Dist),
+									getPesoTotal(LRuas,PesoT),
+                                    getPrazo(LRuas,Prazo),
+									((PesoT=<100,PesoT>20) -> Trans is 3;
+                                     (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
+                                     (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
+
 
 %Tem todas as ruas das entregas
 resolve([IdRua],FULL/Custo) :- 
