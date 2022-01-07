@@ -33,7 +33,7 @@ validaEscolha(_).
 %Função que chama as funções que implementam as funcionalidades
 executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
 			  read(IdEstafeta),nl,
-			  transPossiveisAestrela(IdEstafeta,Trans,C,TempFinal,PT,PZ),
+			  transPossiveisAestrela(IdEstafeta,Trans,C,TempFinal,PT,PZ,Dist),
 			  inverso(C,Cinv),
 			  nomeTr([Trans],T),
 			  nomeRua(Cinv,CN),
@@ -42,7 +42,7 @@ executa(X) :- X =:= 1, nl,write('Insira o ID do estafeta'),nl,
 			  write('Nome do transporte: '), printList(T),
 			  write('Tempo da entrega:'),write(TempFinal),nl,
 			  write('Percurso: '),nl,
-			  printList(CN),nl,write('Distância: '),write(),nl,!.
+			  printList(CN),nl,write('Distância: '),write(Dist),nl,!.
 executa(X) :- X =:= 2, nl, write('Insira ID Estafeta : '),nl,
                             read(IDestafeta),nl,
 			     transPossiveis(IDestafeta,Trans,C,TempFinal,PT,PZ),
@@ -296,7 +296,7 @@ transPossiveisDFSlim(Idest,Trans,C,TF,PesoT,Prazo,Profundidade) :- getRuasDoEsta
                                      (PesoT=<20,PesoT>5) -> escolheM_C(Dist,Trans,Prazo,PesoT,TF);%mota ou carro
                                      (PesoT>0,PesoT=<5) -> escolheMaisEco(Dist,Trans,Prazo,PesoT,TF)).%bicicleta, mota ou carro
 
-transPossiveisAestrela(Idest,Trans,C,TF,PesoT,Prazo) :-  getRuasDoEstafeta(Idest,LRuas), 
+transPossiveisAestrela(Idest,Trans,C,TF,PesoT,Prazo,Dist) :-  getRuasDoEstafeta(Idest,LRuas), 
 						  			getRuasOrdenadasPorID(LRuas,LRuasOrd), 
                           			resolveAestrelaLista(LRuasOrd,C/Dist),
 									getPesoTotal(LRuas,PesoT),
