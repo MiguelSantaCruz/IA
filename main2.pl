@@ -222,8 +222,12 @@ escolheMaisEco(Dist,T,Prazo,Peso,TF) :- TempoB is (Dist)/ (10 - (0.7 * Peso)), T
 				(TempoM =< Prazo) -> T is 2,TF is TempoM;
 				T is 3,TF is TempoC).		
 				
+%getRuasDoEstafeta(IdEst,T):- findall(L,estafeta(IdEst,_,L),[Lenc|_]),
+%			      findall(Idenc,(member(Idenc,Lenc), not(entrega(_,_,Idenc,_,_,_))),L),
+%			      findall(Idrua/Peso/Prazo/Idenc,(member(Idenc,L),encomenda(Idenc,Peso,_,_,Prazo,Idrua,_,_)),T).
+
 getRuasDoEstafeta(IdEst,T):- findall(L,estafeta(IdEst,_,L),[Lenc|_]),
-					findall(Idrua/Peso/Prazo/Idenc,(member(Idenc,Lenc),encomenda(Idenc, Peso, _, _, Prazo,Idrua,_,emDistribuicao,_)),T).
+			      findall(Idrua/Peso/Prazo/Idenc,(member(Idenc,Lenc),encomenda(Idenc,Peso,_,_,Prazo,Idrua,_,emDistribuicao,_)),T).
 					
 
 getPesoTotal([],0).
@@ -370,3 +374,60 @@ escolheTranspMaisEcologicoAux([X|XS], Prazo,Distancia, Peso ,IdTransporteEcologi
 																					   Tempo =< Prazo,
 																					   IdTransporteEcologico is X,!.
 escolheTranspMaisEcologicoAux([X|XS],Prazo,Distancia,Peso,IdTransporteEcologico) :- escolheTranspMaisEcologicoAux(XS,Prazo,Distancia,Peso,IdTransporteEcologico).
+
+
+
+
+
+%identificar quais as rotas com maior número de entregas (por volume e peso)
+
+getRuaPeso(Idrua,P):- encomenda(_,P,_,_,_,Idrua,_,_,_).
+
+pesoRota([]/_,0).
+pesoRota([Id]/I,P/I):- getRuaPeso(Id,P).
+pesoRota([ID,ID2|T]/I,P/I):- getRuaPeso(ID,P1),
+			    getRuaPeso(ID2,P2), 
+			    P3 is P1+P2, 
+			    pesoRota(T/I,PT/I), 
+			    P is PT+P3.
+
+
+pesoRotas(Le, Sorted):- maplist(pesoRota(), Le, L),sort(0, @>=, L,  Sorted).
+
+
+
+rotaMaisPesada(Peso,Rota):- findall(L/Id,rota(Id,L),T), pesoRotas(T,[Peso/Rota|_]).
+
+getRuaVolume(Idrua,V):- encomenda(_,_,V,_,_,Idrua,_,_,_).
+
+volumeRota([]/_,0).
+volumeRota([Id]/I,V/I):- getRuaVolume(Id,V).
+volumeRota([ID,ID2|T]/I,V/I):- getRuaVolume(ID,V1),
+			    getRuaVolume(ID2,V2),
+			    V3 is V1+V2, 
+			    volumeRota(T/I,VT/I), 
+			    V is VT+V3.
+
+
+volumeRotas(Le, Sorted):- maplist(volumeRota(), Le, List), sort(0, @>=, List,  Sorted).
+
+
+
+rotaMaisVolumosa(Volume,Rota):- findall(L/Id,rota(Id,L),T), volumeRotas(T,[Volume/Rota|_]).
+
+%Escolher a rota mais rápida (usando o critério da distância);
+dist([IdRua,IdRua2]/I,Custo/I) :- 
+        getEstrada(IdRua,IdRua2,Custo).
+        
+dist([IdRua,IdRua2|T1]/I,Custo/I) :-
+           getEstrada(IdRua, IdRua2, CustoTmp),
+           dist([IdRua2|T1]/I,C1/I),
+           Custo is C1+CustoTmp.
+
+distRotas(Le, Sorted):- maplist(dist(), Le, L),sort(0, @=<, L,  Sorted).
+
+
+
+rotaMenosDist(Distancia,Rota):- findall(L/Id,rota(Id,L),T), distRotas(T,[Distancia/Rota|_]).
+
+

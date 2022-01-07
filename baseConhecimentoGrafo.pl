@@ -132,14 +132,19 @@ estima(12,12,0).
 %-----------------Encomendas------------------
 %encomenda(identificador, peso, volume, cliente, prazo de entrega(horas),rua, preço, Estado,data de encomenda)
 
-encomenda(1,5,53,1,6,1,20,efetuada,data(5,12,2021,07,00)).
+encomenda(1,5,53,1,6,2,20,efetuada,data(5,12,2021,07,00)).
 encomenda(2,13,20,2,12,3,30,efetuada,data(1,12,2021,01,00)).
 encomenda(3,2,3,3,24,6,2022,efetuada,data(2,12,2021,19,00)).
 encomenda(4,7,43,4,16,8,203,efetuada,data(3,12,2021,08,00)).
-encomenda(5,7,43,4,16,8,203,efetuada,data(3,12,2021,08,00)).
+encomenda(5,7,43,4,16,7,203,efetuada,data(3,12,2021,08,00)).
 
-encomenda(6,7,43,4,16,8,203,emDistribuicao,data(3,12,2021,08,00)).
-encomenda(7,8,43,4,10,4,203,emDistribuicao,data(3,12,2021,08,00)).
+encomenda(6,7,43,4,16,4,20,emDistribuicao,data(3,12,2021,08,00)).
+encomenda(7,8,40,4,10,5,20,emDistribuicao,data(3,12,2021,08,00)).
+
+%------------------Rota---------------
+rota(1,[2,3]).
+rota(2,[3,5,4,6]).
+rota(3,[6,4,5]).
 %-----------------Estafetas------------------
 %O ranking é calculado na função 6. com base na lista de encomendas
 %estafeta(identificador, nome, lista de encomendas)
@@ -161,6 +166,7 @@ entrega(7,2,6,data(3,12,2021,12,00),5,porDefinir).
 transporte(1,'bicicleta',5,10,3).
 transporte(2,'moto',20,35,2).
 transporte(3,'carro',100,50,1).
+
 
 %-----------------Ruas------------------
 %rua(identificador, nome da rua)
@@ -184,3 +190,5 @@ cliente(1,'Sara Rodrigues',123456789, 1).
 cliente(2,'Henrique Marques',023456789, 2).
 cliente(3,'Leonor Losa',234234233, 3).
 cliente(4,'Inês Faria',197837476, 4).
+
+
